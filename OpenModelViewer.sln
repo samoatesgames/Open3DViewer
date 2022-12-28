@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenModelViewer.Gui", "OpenModelViewer.Gui\OpenModelViewer.Gui.csproj", "{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{BC3AD7AA-CFFB-4E55-8422-D552E8A3E9DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenModelViewer.RenderViewControl", "OpenModelViewer.RenderViewControl\OpenModelViewer.RenderViewControl.csproj", "{7FBCD810-D997-407A-8192-2321FE6D22A1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FBCD810-D997-407A-8192-2321FE6D22A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FBCD810-D997-407A-8192-2321FE6D22A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FBCD810-D997-407A-8192-2321FE6D22A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FBCD810-D997-407A-8192-2321FE6D22A1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7FBCD810-D997-407A-8192-2321FE6D22A1} = {BC3AD7AA-CFFB-4E55-8422-D552E8A3E9DD}
+	EndGlobalSection
+EndGlobal
