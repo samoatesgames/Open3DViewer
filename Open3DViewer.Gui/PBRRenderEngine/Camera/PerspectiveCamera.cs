@@ -12,6 +12,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
         private readonly DeviceBuffer m_viewBuffer;
 
         private float m_aspectRatio;
+        private Matrix4x4 m_projectionMatrix;
         private GLTFEntity<PBRRenderEngine> m_lookAtEntity;
 
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
@@ -23,29 +24,32 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             engine.RegisterSharedResource(CoreSharedResource.ViewBuffer, m_viewBuffer);
 
             var frameBuffer = engine.Swapchain.Framebuffer;
-            m_aspectRatio = (float)frameBuffer.Width / frameBuffer.Height;
+            OnSwapchainResized(frameBuffer.Width, frameBuffer.Height);
         }
 
         public void OnSwapchainResized(uint width, uint height)
         {
             m_aspectRatio = (float)width / height;
-        }
-
-        public void GenerateCommands(CommandList commandList)
-        {
-            // TODO: Handle view port dimension changes, then update this matrix/buffer - we don't need to do it all the time.
-            var projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
+            m_projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
                 1.0f,
                 m_aspectRatio,
                 0.005f,
                 100f);
-            commandList.UpdateBuffer(m_projectionBuffer, 0, projectionMatrix);
+        }
 
+        public void GenerateCommands(CommandList commandList)
+        {
+            commandList.UpdateBuffer(m_projectionBuffer, 0, m_projectionMatrix);
 
             if (m_lookAtEntity != null)
             {
                 var lookAtBounds = m_lookAtEntity.GetBoundingBox();
-                var cameraPosition = lookAtBounds.Center + (Vector3.UnitZ * (lookAtBounds.Extent.Length() * -2.5f));
+                var boundsExtent = lookAtBounds.Extent.Length();
+
+                var cameraPosition = lookAtBounds.Center
+                                     + (Vector3.UnitX * (boundsExtent))
+                                     + (Vector3.UnitY * (boundsExtent))
+                                     + (Vector3.UnitZ * (boundsExtent * -2.5f));
                 var cameraLookAt = lookAtBounds.Center;
 
                 var lookAtMatrix = Matrix4x4.CreateLookAt(cameraPosition, cameraLookAt, Vector3.UnitY);
