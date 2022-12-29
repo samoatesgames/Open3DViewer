@@ -5,10 +5,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:renderViewControl="clr-namespace:Open3DViewer.RenderViewControl;assembly=Open3DViewer.RenderViewControl"
+             xmlns:viewModel="clr-namespace:Open3DViewer.Gui.ViewModel"
              mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance viewModel:ApplicationViewModel}"
              Title="Open 3D Viewer"
-             WindowStartupLocation="CenterScreen"
-             Width="1280" Height="720">
+             WindowStartupLocation="CenterScreen" Width="1280" Height="720">
     <ui:UiWindow.Resources>
         <ResourceDictionary>
             <Style x:Key="Style.Path.Icon" TargetType="{x:Type Path}">
@@ -57,6 +58,8 @@
         <!-- Top Menu Row -->
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
@@ -110,6 +113,15 @@
                     <ui:MenuItem Header="Controls" InputGestureText="F1" Icon="{StaticResource Icon.Help.Controls}" Command="{Binding CommandHelpControls}" />
                     <ui:MenuItem Header="Settings" Icon="{StaticResource Icon.Help.Settings}" Command="{Binding CommandHelpSettings}" />
                     <ui:MenuItem Header="Feedback" Icon="{StaticResource Icon.Help.Feedback}" Command="{Binding CommandHelpFeedback}" />
+                </ui:MenuItem>
+            </Menu>
+
+            <Menu Grid.Column="2" Background="{StaticResource SolidBackgroundFillColorBaseBrush}">
+                <ui:MenuItem Header="Example Assets">
+                    <ui:MenuItem Header="Axes" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Axes/Axes.glb" />
+                    <ui:MenuItem Header="Box" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Box/Box.glb" />
+                    <ui:MenuItem Header="Helmet" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Helmet/Helmet.glb" />
+                    <ui:MenuItem Header="Lantern" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Lantern/Lantern.glb" />
                 </ui:MenuItem>
             </Menu>
         </Grid>

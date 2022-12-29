@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
+using SharpGLTF.Schema2;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Numerics;
-using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
-using Open3DViewer.RenderViewControl;
-using SharpGLTF.Schema2;
 using Veldrid;
+using Vortice.Mathematics;
 using Texture = SharpGLTF.Schema2.Texture;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
@@ -40,19 +41,29 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         }
         
         private readonly List<GLTFMesh> m_meshes = new List<GLTFMesh>();
-        
+
+        public BoundingBox BoundingBox { get; } = new BoundingBox();
+
         private GLTFScene(PBRRenderEngine engine, ModelRoot modelRoot)
         {
+            var sceneBounds = new BoundingBox();
+
             foreach (var node in modelRoot.LogicalNodes)
             {
                 if (node.Mesh != null)
                 {
                     foreach (var primitive in node.Mesh.Primitives)
                     {
-                        m_meshes.Add(CreateRenderMesh(engine, primitive, node.LocalMatrix));
+                        if (TryCreateRenderMesh(engine, primitive, node.LocalMatrix, out var gltfMesh))
+                        {
+                            sceneBounds = BoundingBox.CreateMerged(sceneBounds, gltfMesh.BoundingBox);
+                            m_meshes.Add(gltfMesh);
+                        }
                     }
                 }
             }
+
+            BoundingBox = sceneBounds;
         }
         
         public void Dispose()
@@ -64,7 +75,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_meshes.Clear();
         }
 
-        private GLTFMesh CreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform)
+        private bool TryCreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform, out GLTFMesh gltfMesh)
         {
             var indices = new List<ushort>();
             foreach (var i in primitive.IndexAccessor.AsIndicesArray())
@@ -99,9 +110,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 // We must have a position stream to render something...
                 // TODO: log error
-                var emptyMesh = new GLTFMesh(engine, transform);
-                emptyMesh.Initialize(Array.Empty<VertexLayoutFull>(), indices.ToArray());
-                return emptyMesh;
+                gltfMesh = null;
+                return false;
             }
             
             var vertices = new List<VertexLayoutFull>();
@@ -133,17 +143,19 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 vertices.Add(vertex);
             }
 
-            var mesh = new GLTFMesh(engine, transform);
+            var transformedVertexPositions = positionStream.Select(x => Vector3.Transform(x, transform)).ToArray();
+            var boundingBox = BoundingBox.CreateFromPoints(transformedVertexPositions);
+            gltfMesh = new GLTFMesh(engine, transform, boundingBox);
 
             var diffuseTexture = primitive.Material?.GetDiffuseTexture();
             if (diffuseTexture != null)
             {
                 var loadedTexture = LoadTexture(engine, diffuseTexture);
-                mesh.SetTexture(0, loadedTexture);
+                gltfMesh.SetTexture(0, loadedTexture);
             }
-            
-            mesh.Initialize(vertices.ToArray(), indices.ToArray());
-            return mesh;
+
+            gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
+            return true;
         }
 
         private Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture diffuseTexture)

@@ -12,7 +12,7 @@ namespace Open3DViewer.RenderViewControl
         private CommandList m_commandList;
         private GraphicsDevice m_graphicsDevice;
         private bool m_rendering;
-        
+
         public static readonly DependencyProperty RenderEngineProperty = 
             DependencyProperty.Register(nameof(RenderEngine), typeof(IRenderEngine), typeof(RenderViewControl)); 
 
@@ -96,6 +96,8 @@ namespace Open3DViewer.RenderViewControl
             var width = (uint)(ActualWidth < 0 ? 0 : Math.Ceiling(ActualWidth * dpiScale));
             var height = (uint)(ActualHeight < 0 ? 0 : Math.Ceiling(ActualHeight * dpiScale));
             m_swapchain.Resize(width, height);
+
+            RenderEngine?.OnSwapchainResized(width, height);
         }
 
         private void Render()

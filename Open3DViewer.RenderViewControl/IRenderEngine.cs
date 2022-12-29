@@ -14,5 +14,6 @@ namespace Open3DViewer.RenderViewControl
         
         void Initialize(GraphicsDevice graphicsDevice, ResourceFactory factory, Swapchain swapchain);
         void Render(CommandList commandList);
+        void OnSwapchainResized(uint width, uint height);
     }
 }

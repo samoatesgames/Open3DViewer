@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Open3DViewer.Gui.PBRRenderEngine.Camera;
 using Open3DViewer.Gui.PBRRenderEngine.GLTF;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
@@ -30,20 +31,37 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             GraphicsDevice = graphicsDevice;
             ResourceFactory = factory;
             Swapchain = swapchain;
-            
+
             m_camera = new PerspectiveCamera(this, factory);
 
             OnInitialized?.Invoke(this);
         }
 
-        public bool TryLoadAsset(string assetPath)
+        public async Task<bool> TryLoadAssetAsync(string assetPath)
         {
-            if (!GLTFScene.TryLoad(this, assetPath, out var gltfScene))
+            if (m_entity != null)
+            {
+                m_camera.LookAt(null);
+                m_entity.Dispose();
+                m_entity = null;
+            }
+
+            GLTFScene gltfScene = null;
+            await Task.Run(() =>
+            {
+                if (!GLTFScene.TryLoad(this, assetPath, out gltfScene))
+                {
+                    gltfScene = null;
+                }
+            });
+
+            if (gltfScene == null)
             {
                 return false;
             }
 
             m_entity = new GLTFEntity<PBRRenderEngine>(this, gltfScene);
+            m_camera.LookAt(m_entity);
             return true;
         }
 
@@ -51,6 +69,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         {
             m_camera.GenerateCommands(commandList);
             m_entity?.Render(commandList);
+        }
+
+        public void OnSwapchainResized(uint width, uint height)
+        {
+            m_camera.OnSwapchainResized(width, height);
         }
 
         public void Dispose()

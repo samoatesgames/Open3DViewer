@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Veldrid;
 using Veldrid.SPIRV;
+using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
@@ -26,12 +27,15 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         
         private TextureView m_surfaceTextureView;
 
-        public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform)
+        public BoundingBox BoundingBox { get; } 
+
+        public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox)
         {
             m_engine = engine;
             m_worldBuffer = engine.ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
 
             m_localTransform = localTransform;
+            BoundingBox = boundingBox;
         }
 
         public void Dispose()

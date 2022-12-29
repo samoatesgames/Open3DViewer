@@ -2,6 +2,7 @@
 using System.Numerics;
 using Open3DViewer.RenderViewControl;
 using Veldrid;
+using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
@@ -25,10 +26,15 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             m_ticks += 10.0f;
 
-            var rotation = Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, (m_ticks / 1000f));
+            var rotation = Matrix4x4.CreateFromAxisAngle(Vector3.UnitY, (-m_ticks / 1000f));
             var scale = Matrix4x4.CreateScale(1.0f);
 
             m_scene.Render(commandList, rotation * scale);
+        }
+
+        public BoundingBox GetBoundingBox()
+        {
+            return m_scene.BoundingBox;
         }
     }
 }
