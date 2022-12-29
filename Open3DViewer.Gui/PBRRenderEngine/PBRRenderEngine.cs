@@ -20,7 +20,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public ResourceFactory ResourceFactory { get; private set; }
         public Swapchain Swapchain { get; private set; }
 
-        public RgbaFloat ClearColor { get; } = RgbaFloat.Cyan;
+        public RgbaFloat ClearColor { get; } = new RgbaFloat(0.45882f, 0.45882f, 0.45882f, 1.0f);
         public float ClearDepth { get; } = 1.0f;
 
         public delegate void RenderEngineInitialized(PBRRenderEngine engine);
