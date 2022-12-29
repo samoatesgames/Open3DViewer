@@ -1,4 +1,6 @@
-﻿namespace Open3DViewer.Gui
+﻿using Open3DViewer.Gui.ViewModel;
+
+namespace Open3DViewer.Gui
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -9,7 +11,10 @@
         {
             InitializeComponent();
 
-            RenderView.RenderEngine = new PBRRenderEngine.PBRRenderEngine();
+            var renderEngine = new PBRRenderEngine.PBRRenderEngine();
+            RenderView.RenderEngine = renderEngine;
+
+            DataContext = new ApplicationViewModel(renderEngine);
         }
     }
 }

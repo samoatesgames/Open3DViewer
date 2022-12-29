@@ -25,10 +25,18 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 scene = null;
                 return false;
             }
-            
-            var model = ModelRoot.Load(gltfFilePath);
-            scene = new GLTFScene(engine, model);
-            return true;
+
+            try
+            {
+                var model = ModelRoot.Load(gltfFilePath);
+                scene = new GLTFScene(engine, model);
+                return true;
+            }
+            catch
+            {
+                scene = null;
+                return false;
+            }
         }
         
         private readonly List<GLTFMesh> m_meshes = new List<GLTFMesh>();

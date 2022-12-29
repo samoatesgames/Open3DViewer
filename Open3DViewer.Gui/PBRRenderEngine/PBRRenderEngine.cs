@@ -18,9 +18,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
         public Swapchain Swapchain { get; private set; }
+
         public RgbaFloat ClearColor { get; } = RgbaFloat.Cyan;
         public float ClearDepth { get; } = 1.0f;
-        
+
+        public delegate void RenderEngineInitialized(PBRRenderEngine engine);
+        public event RenderEngineInitialized OnInitialized;
+
         public void Initialize(GraphicsDevice graphicsDevice, ResourceFactory factory, Swapchain swapchain)
         {
             GraphicsDevice = graphicsDevice;
@@ -29,17 +33,24 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             
             m_camera = new PerspectiveCamera(this, factory);
 
-            //var gltfPath = @"Assets\Box\BoxTextured.glb";
-            var gltfPath = @"Assets\Helmet\DamagedHelmet.glb";
-            GLTFScene.TryLoad(this, gltfPath, out var gltfScene);
+            OnInitialized?.Invoke(this);
+        }
+
+        public bool TryLoadAsset(string assetPath)
+        {
+            if (!GLTFScene.TryLoad(this, assetPath, out var gltfScene))
+            {
+                return false;
+            }
+
             m_entity = new GLTFEntity<PBRRenderEngine>(this, gltfScene);
+            return true;
         }
 
         public void Render(CommandList commandList)
         {
             m_camera.GenerateCommands(commandList);
-
-            m_entity.Render(commandList);
+            m_entity?.Render(commandList);
         }
 
         public void Dispose()
