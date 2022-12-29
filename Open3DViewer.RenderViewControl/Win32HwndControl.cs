@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
@@ -19,7 +20,7 @@ namespace Open3DViewer.RenderViewControl
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
         }
-        
+
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
             Initialize();
@@ -68,84 +69,73 @@ namespace Open3DViewer.RenderViewControl
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             UpdateWindowPos();
-
             base.OnRenderSizeChanged(sizeInfo);
-
             if (HwndInitialized)
             {
                 Resized();
             }
-
         }
-
-
 
         protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-
             switch (msg)
-
             {
-
                 case NativeMethods.WM_LBUTTONDOWN:
-
                     RaiseMouseEvent(MouseButton.Left, Mouse.MouseDownEvent);
-
                     break;
-
-
 
                 case NativeMethods.WM_LBUTTONUP:
-
                     RaiseMouseEvent(MouseButton.Left, Mouse.MouseUpEvent);
-
                     break;
-
-
 
                 case NativeMethods.WM_RBUTTONDOWN:
-
                     RaiseMouseEvent(MouseButton.Right, Mouse.MouseDownEvent);
-
                     break;
-
-
 
                 case NativeMethods.WM_RBUTTONUP:
-
                     RaiseMouseEvent(MouseButton.Right, Mouse.MouseUpEvent);
-
                     break;
 
+                case NativeMethods.WM_MOUSEMOVE:
+                    RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0)
+                    {
+                        RoutedEvent = Mouse.MouseMoveEvent,
+                        Source = this
+                    });
+                    break;
+
+                case NativeMethods.WM_MOUSEWHEEL:
+                    var delta = NativeMethods.GET_WHEEL_DELTA_WPARAM(wParam);
+                    RaiseEvent(new MouseWheelEventArgs(Mouse.PrimaryDevice, 0, delta)
+                    {
+                        RoutedEvent = Mouse.MouseWheelEvent,
+                        Source = this
+                    });
+                    break;
             }
 
-
-
             return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
-
         }
-
-
 
         private void RaiseMouseEvent(MouseButton button, RoutedEvent @event)
-
         {
-
             RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, button)
-
             {
-
                 RoutedEvent = @event,
-
-                Source = this,
-
+                Source = this
             });
-
         }
 
+        protected bool IsMouseOverControl()
+        {
+            if (NativeMethods.GetCursorPos(out var p))
+            {
+                IntPtr hWnd = NativeMethods.WindowFromPoint(p);
+                return hWnd == Hwnd;
+            }
+            return false;
+        }
     }
-
-
 
     internal class NativeMethods
 
@@ -167,10 +157,17 @@ namespace Open3DViewer.RenderViewControl
 
         public const int WM_RBUTTONUP = 0x0205;
 
+        public const int WM_MOUSEMOVE = 0x0200;
 
+        public const int WM_MOUSEWHEEL = 0x020A;
 
         public const int IDC_ARROW = 32512;
 
+        [DllImport("user32.dll")]
+        internal static extern bool GetCursorPos(out System.Drawing.Point lpPoint);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr WindowFromPoint(System.Drawing.Point p);
 
 
         [StructLayout(LayoutKind.Sequential)]
@@ -221,7 +218,7 @@ namespace Open3DViewer.RenderViewControl
 
         public static readonly WndProc DefaultWindowProc = DefWindowProc;
 
-   
+
         [DllImport("user32.dll", EntryPoint = "CreateWindowEx", CharSet = CharSet.Auto)]
 
         public static extern IntPtr CreateWindowEx(
@@ -271,6 +268,16 @@ namespace Open3DViewer.RenderViewControl
         [DllImport("user32.dll")]
 
         public static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+
+        internal static ushort HIWORD(IntPtr dwValue)
+        {
+            return (ushort)((((long)dwValue) >> 0x10) & 0xffff);
+        }
+
+        internal static int GET_WHEEL_DELTA_WPARAM(IntPtr wParam)
+        {
+            return (short)HIWORD(wParam);
+        }
 
         // ReSharper restore InconsistentNaming
     }

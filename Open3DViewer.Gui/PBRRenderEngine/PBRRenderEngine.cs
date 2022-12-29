@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Open3DViewer.Gui.PBRRenderEngine.Camera;
 using Open3DViewer.Gui.PBRRenderEngine.GLTF;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
@@ -14,6 +16,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             new Dictionary<CoreSharedResource, BindableResource>();
 
         private PerspectiveCamera m_camera;
+
+        private readonly long m_fixedUpdateTickCount = TimeSpan.FromMilliseconds(50).Ticks;
+        private long m_lastUpdate;
         
         private GLTFEntity m_entity;
         public GraphicsDevice GraphicsDevice { get; private set; }
@@ -67,6 +72,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         public void Render(CommandList commandList)
         {
+            // TODO: Do a real fixed update as 'Render' is based on frame rate
+            var now = DateTime.Now.Ticks;
+            if (now - m_lastUpdate > m_fixedUpdateTickCount)
+            {
+                m_camera.FixedUpdate();
+                m_lastUpdate = now;
+            }
+
             m_camera.GenerateCommands(commandList);
             m_entity?.Render(commandList);
         }
@@ -74,6 +87,36 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public void OnSwapchainResized(uint width, uint height)
         {
             m_camera.OnSwapchainResized(width, height);
+        }
+
+        public void OnMouseDown(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        {
+            m_camera.OnMouseDown(control, args);
+        }
+
+        public void OnMouseUp(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        {
+            m_camera.OnMouseUp(control, args);
+        }
+
+        public void OnMouseMove(RenderViewControl.RenderViewControl control, MouseEventArgs args)
+        {
+            m_camera.OnMouseMove(control, args);
+        }
+
+        public void OnMouseWheel(RenderViewControl.RenderViewControl sender, MouseWheelEventArgs args)
+        {
+            m_camera.OnMouseWheel(sender, args);
+        }
+
+        public void OnKeyDown(RenderViewControl.RenderViewControl control, KeyEventArgs args)
+        {
+            m_camera.OnKeyDown(control, args);
+        }
+
+        public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
+        {
+            m_camera.OnKeyUp(control, args);
         }
 
         public void Dispose()

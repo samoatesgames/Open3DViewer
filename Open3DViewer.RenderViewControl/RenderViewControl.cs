@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Veldrid;
+using Vulkan.Xlib;
+using Window = System.Windows.Window;
 
 namespace Open3DViewer.RenderViewControl
 {
@@ -33,6 +36,51 @@ namespace Open3DViewer.RenderViewControl
 
             m_rendering = true;
             CompositionTarget.Rendering += OnCompositionTargetRendering;
+
+            MouseDown += (sender, args) =>
+            {
+                if (sender is RenderViewControl renderView)
+                {
+                    renderView.CaptureMouse();
+                    RenderEngine?.OnMouseDown(renderView, args);
+                }
+            };
+            MouseUp += (sender, args) =>
+            {
+                if (sender is RenderViewControl renderView)
+                {
+                    RenderEngine?.OnMouseUp(renderView, args);
+                    renderView.ReleaseMouseCapture();
+                }
+            };
+            MouseMove += (sender, args) =>
+            {
+                RenderEngine?.OnMouseMove(sender as RenderViewControl, args);
+            };
+            MouseWheel += (sender, args) =>
+            {
+                RenderEngine?.OnMouseWheel(sender as RenderViewControl, args);
+            };
+
+            var window = Window.GetWindow(this);
+            if (window != null)
+            {
+                var control = this;
+                window.KeyDown += (sender, args) =>
+                {
+                    if (IsMouseOverControl())
+                    {
+                        RenderEngine?.OnKeyDown(control, args);
+                    }
+                };
+                window.KeyUp += (sender, args) =>
+                {
+                    if (IsMouseOverControl())
+                    {
+                        RenderEngine?.OnKeyUp(control, args);
+                    }
+                };
+            }
         }
 
         protected override void Uninitialize()
@@ -112,6 +160,7 @@ namespace Open3DViewer.RenderViewControl
             RenderEngine.Render(m_commandList);
             
             m_commandList.End();
+
             m_graphicsDevice.SubmitCommands(m_commandList);
             m_graphicsDevice.SwapBuffers(m_swapchain);
         }
