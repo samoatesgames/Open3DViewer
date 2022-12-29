@@ -15,7 +15,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         private PerspectiveCamera m_camera;
         
-        private GLTFEntity<PBRRenderEngine> m_entity;
+        private GLTFEntity m_entity;
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
         public Swapchain Swapchain { get; private set; }
@@ -60,7 +60,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
                 return false;
             }
 
-            m_entity = new GLTFEntity<PBRRenderEngine>(this, gltfScene);
+            m_entity = new GLTFEntity(gltfScene);
             m_camera.LookAt(m_entity);
             return true;
         }

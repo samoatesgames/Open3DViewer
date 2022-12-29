@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Numerics;
-using Open3DViewer.RenderViewControl;
 using Veldrid;
 using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
-    public class GLTFEntity<TRenderEngine> : IDisposable 
-        where TRenderEngine : IRenderEngine
+    public class GLTFEntity : IDisposable
     {
         private readonly GLTFScene m_scene;
         private float m_ticks;
         
-        public GLTFEntity(TRenderEngine engine, GLTFScene scene)
+        public GLTFEntity(GLTFScene scene)
         {
             m_scene = scene;
         }

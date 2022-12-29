@@ -1,8 +1,7 @@
-﻿using System.Numerics;
-using Open3DViewer.Gui.PBRRenderEngine.GLTF;
+﻿using Open3DViewer.Gui.PBRRenderEngine.GLTF;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
+using System.Numerics;
 using Veldrid;
-using Vulkan;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 {
@@ -13,7 +12,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
         private float m_aspectRatio;
         private Matrix4x4 m_projectionMatrix;
-        private GLTFEntity<PBRRenderEngine> m_lookAtEntity;
+        private GLTFEntity m_lookAtEntity;
 
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
         {
@@ -62,7 +61,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             }
         }
 
-        public void LookAt(GLTFEntity<PBRRenderEngine> entity)
+        public void LookAt(GLTFEntity entity)
         {
             m_lookAtEntity = entity;
         }

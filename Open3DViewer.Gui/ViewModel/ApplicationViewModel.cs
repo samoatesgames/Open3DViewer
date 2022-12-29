@@ -1,8 +1,7 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.Input;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.Input;
-using Wpf.Ui.Common;
 
 namespace Open3DViewer.Gui.ViewModel
 {
