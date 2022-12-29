@@ -276,7 +276,6 @@
     <Compile Include="PBRRenderEngine\Shaders\ObjectShader.cs" />
     <Compile Include="PBRRenderEngine\Shaders\IRenderShader.cs" />
     <Compile Include="PBRRenderEngine\Types\CoreSharedResource.cs" />
-    <Compile Include="PBRRenderEngine\Types\RenderMesh.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -292,6 +291,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="Assets\Axes\Axes.glb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Assets\Box\Box.glb" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -301,10 +304,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Box\BoxTextured.glb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Helmet\DamagedHelmet.glb">
+    <Content Include="Assets\Helmet\Helmet.glb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Lantern\Lantern.glb">

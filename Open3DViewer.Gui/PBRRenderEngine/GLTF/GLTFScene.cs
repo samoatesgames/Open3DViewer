@@ -43,11 +43,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         
         private GLTFScene(PBRRenderEngine engine, ModelRoot modelRoot)
         {
-            foreach (var mesh in modelRoot.LogicalMeshes)
+            foreach (var node in modelRoot.LogicalNodes)
             {
-                foreach (var primitive in mesh.Primitives)
+                if (node.Mesh != null)
                 {
-                    m_meshes.Add(CreateRenderMesh(engine, primitive));
+                    foreach (var primitive in node.Mesh.Primitives)
+                    {
+                        m_meshes.Add(CreateRenderMesh(engine, primitive, node.LocalMatrix));
+                    }
                 }
             }
         }
@@ -61,7 +64,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_meshes.Clear();
         }
 
-        private GLTFMesh CreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive)
+        private GLTFMesh CreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform)
         {
             var indices = new List<ushort>();
             foreach (var i in primitive.IndexAccessor.AsIndicesArray())
@@ -96,7 +99,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 // We must have a position stream to render something...
                 // TODO: log error
-                var emptyMesh = new GLTFMesh(engine);
+                var emptyMesh = new GLTFMesh(engine, transform);
                 emptyMesh.Initialize(Array.Empty<VertexLayoutFull>(), indices.ToArray());
                 return emptyMesh;
             }
@@ -130,7 +133,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 vertices.Add(vertex);
             }
 
-            var mesh = new GLTFMesh(engine);
+            var mesh = new GLTFMesh(engine, transform);
 
             var diffuseTexture = primitive.Material?.GetDiffuseTexture();
             if (diffuseTexture != null)
@@ -152,19 +155,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             }
         }
 
-        public void SetWorldBuffer(IRenderEngine engine, DeviceBuffer worldBuffer)
+        public void Render(CommandList commandList, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)
             {
-                mesh.SetWorldBuffer(engine, worldBuffer);
-            }
-        }
-
-        public void Render(CommandList commandList)
-        {
-            foreach (var mesh in m_meshes)
-            {
-                mesh.Render(commandList);
+                mesh.Render(commandList, worldTransform);
             }
         }
     }
