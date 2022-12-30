@@ -77,6 +77,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
         private bool TryCreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform, out GLTFMesh gltfMesh)
         {
+            if (primitive.IndexAccessor == null)
+            {
+                // We must have indices to render something...
+                // TODO: log error
+                gltfMesh = null;
+                return false;
+            }
+
             var indices = new List<ushort>();
             foreach (var i in primitive.IndexAccessor.AsIndicesArray())
             {
@@ -192,14 +200,19 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             return true;
         }
 
-        private Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture inputTexture)
+        public static Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture inputTexture)
         {
             using (var stream = new MemoryStream(inputTexture.PrimaryImage.Content.Content.ToArray()))
             {
-                var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
-                var deviceTexture = imageSharpTexture.CreateDeviceTexture(engine.GraphicsDevice, engine.ResourceFactory);
-                return deviceTexture;
+                return LoadTexture(engine, stream);
             }
+        }
+
+        public static Veldrid.Texture LoadTexture(PBRRenderEngine engine, Stream stream)
+        {
+            var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
+            var deviceTexture = imageSharpTexture.CreateDeviceTexture(engine.GraphicsDevice, engine.ResourceFactory);
+            return deviceTexture;
         }
 
         public void Render(CommandList commandList, Matrix4x4 worldTransform)

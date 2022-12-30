@@ -51,7 +51,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
                 1.0f,
                 m_aspectRatio,
                 0.005f,
-                100f);
+                1000f);
         }
 
         public void OnMouseDown(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
@@ -131,7 +131,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             var newZoom = m_zoomAmount + m_zoomDelta;
             m_zoomDelta *= 0.75f;
 
-            if (newZoom <= -(m_entitySize * 1.5f))
+            if (newZoom <= -(m_entitySize * 0.5f))
             {
                 m_zoomAmount = newZoom;
             }
