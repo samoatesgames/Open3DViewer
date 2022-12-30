@@ -58,6 +58,7 @@
     <ui:UiWindow.InputBindings>
         <KeyBinding Command="{Binding Commands.CommandFileOpen}" Modifiers="Control" Key="O" />
         <KeyBinding Command="{Binding Commands.CommandFileSaveAs}" Modifiers="Control" Key="S" />
+        <KeyBinding Command="{Binding Commands.CommandLoadExampleAsset}" Modifiers="Control" Key="E" />
     </ui:UiWindow.InputBindings>
 
     <Grid>

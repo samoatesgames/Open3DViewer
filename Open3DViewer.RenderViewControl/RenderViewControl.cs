@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using Veldrid;
-using Vulkan.Xlib;
 using Window = System.Windows.Window;
 
 namespace Open3DViewer.RenderViewControl
@@ -94,6 +95,23 @@ namespace Open3DViewer.RenderViewControl
         protected override void Resized()
         {
             ResizeSwapchain();
+        }
+
+        public MemoryStream TakeScreenshot()
+        {
+            var position = PointToScreen(new System.Windows.Point(0d, 0d));
+            using (var bmp = new Bitmap((int)m_swapchain.Framebuffer.Width, (int)m_swapchain.Framebuffer.Height))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.CopyFromScreen((int)position.X, (int)position.Y, 0, 0, bmp.Size);
+                }
+
+                var stream = new MemoryStream();
+                bmp.Save(stream, ImageFormat.Png);
+                stream.Position = 0;
+                return stream;
+            }
         }
 
         private void OnCompositionTargetRendering(object sender, EventArgs eventArgs)

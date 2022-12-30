@@ -12,12 +12,12 @@ namespace Open3DViewer.Gui.ViewModel
 
         public ApplicationCommands Commands { get; }
 
-        public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine)
+        public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             m_renderEngine = renderEngine;
             renderEngine.OnInitialized += RenderEngineOnOnInitialized;
 
-            Commands = new ApplicationCommands(renderEngine);
+            Commands = new ApplicationCommands(renderEngine, renderViewControl);
         }
 
         private void RenderEngineOnOnInitialized(PBRRenderEngine.PBRRenderEngine engine)

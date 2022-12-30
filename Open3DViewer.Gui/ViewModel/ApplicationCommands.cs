@@ -1,19 +1,22 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Open3DViewer.Gui.ViewModel
 {
     internal class ApplicationCommands : ObservableObject
     {
         private readonly PBRRenderEngine.PBRRenderEngine m_renderEngine;
+        private readonly RenderViewControl.RenderViewControl m_renderViewControl;
         private readonly ICommand m_commandFileRecentOpen;
         private readonly Task m_loadRecentFileTask;
 
@@ -21,24 +24,27 @@ namespace Open3DViewer.Gui.ViewModel
 
         public ICommand CommandFileOpen { get; }
         public ICommand CommandFileSaveAs { get; }
+        public ICommand CommandFileExportImage { get; }
         public ICommand CommandFileExit { get; }
         public ICommand CommandLoadExampleAsset { get; }
 
-        public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine)
+        public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             m_renderEngine = renderEngine;
+            m_renderViewControl = renderViewControl;
 
             m_commandFileRecentOpen = new AsyncRelayCommand<string>(OpenFileByPath);
 
             CommandFileOpen = new AsyncRelayCommand(HandleFileOpen);
             CommandFileSaveAs = new AsyncRelayCommand(HandleFileSaveAs);
+            CommandFileExportImage = new AsyncRelayCommand(HandleFileExportImage);
             CommandFileExit = new RelayCommand(HandleFileExit);
             CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
 
             m_loadRecentFileTask = LoadRecentFileFromFile();
         }
 
-        private async Task AddFileToRecentFiles(string filePath)
+        private async Task AddFileToRecentFiles(string filePath, bool saveToDisk = true)
         {
             var existing = RecentFiles.FirstOrDefault(x => x.FilePath == filePath);
             if (existing != null)
@@ -46,6 +52,11 @@ namespace Open3DViewer.Gui.ViewModel
                 RecentFiles.Remove(existing);
                 RecentFiles.Insert(0, existing);
                 OnPropertyChanged(nameof(RecentFiles));
+
+                if (saveToDisk)
+                {
+                    await SaveRecentFilesToFile();
+                }
                 return;
             }
 
@@ -56,7 +67,10 @@ namespace Open3DViewer.Gui.ViewModel
             }
             OnPropertyChanged(nameof(RecentFiles));
 
-            await SaveRecentFilesToFile();
+            if (saveToDisk)
+            {
+                await SaveRecentFilesToFile();
+            }
         }
 
         private string GetRecentFilesPath()
@@ -91,7 +105,7 @@ namespace Open3DViewer.Gui.ViewModel
                         {
                             continue;
                         }
-                        await AddFileToRecentFiles(filePath);
+                        await AddFileToRecentFiles(filePath, false);
                     }
                 }
             }
@@ -106,9 +120,13 @@ namespace Open3DViewer.Gui.ViewModel
             {
                 using (var writer = new StreamWriter(fileStream))
                 {
-                    foreach (var recentFile in RecentFiles)
+                    var toSave = new List<string>();
+                    toSave.AddRange(RecentFiles.Select(x => x.FilePath));
+                    toSave.Reverse();
+
+                    foreach (var recentFile in toSave)
                     {
-                        await writer.WriteLineAsync(recentFile.FilePath);
+                        await writer.WriteLineAsync(recentFile);
                     }
                 }
             }
@@ -153,6 +171,30 @@ namespace Open3DViewer.Gui.ViewModel
             model.SaveGLB(saveFileDialog.FileName);
 
             await OpenFileByPath(saveFileDialog.FileName);
+        }
+
+        private async Task HandleFileExportImage()
+        {
+            using (var memoryStream = m_renderViewControl.TakeScreenshot())
+            {
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Title = "Select a location to save your image to...",
+                    Filter = "PNG image (*.png)|*.png",
+                    OverwritePrompt = true
+                };
+                if (saveFileDialog.ShowDialog(Application.Current.MainWindow) != true)
+                {
+                    return;
+                }
+
+                using (var fileStream = new FileStream(saveFileDialog.FileName, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    await memoryStream.CopyToAsync(fileStream);
+                }
+
+                Process.Start(saveFileDialog.FileName);
+            }
         }
 
         private void HandleFileExit()

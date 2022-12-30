@@ -14,7 +14,7 @@ namespace Open3DViewer.Gui
             var renderEngine = new PBRRenderEngine.PBRRenderEngine();
             RenderView.RenderEngine = renderEngine;
 
-            DataContext = new ApplicationViewModel(renderEngine);
+            DataContext = new ApplicationViewModel(renderEngine, RenderView);
         }
     }
 }
