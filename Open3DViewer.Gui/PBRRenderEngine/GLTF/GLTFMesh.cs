@@ -10,11 +10,20 @@ using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
+    public enum SamplerIndex : uint
+    {
+        Diffuse = 0,
+        Normal = 1,
+        MetallicRoughness = 2,
+        Emissive = 4,
+        Occlusion = 8
+    }
+
     public class GLTFMesh : IDisposable
     {
         private readonly PBRRenderEngine m_engine;
         private readonly Dictionary<uint, ResourceSet> m_graphicsResources = new Dictionary<uint, ResourceSet>();
-        private readonly Dictionary<uint, Texture> m_textures = new Dictionary<uint, Texture>();
+        
         private readonly DeviceBuffer m_worldBuffer;
         private readonly Matrix4x4 m_localTransform;
 
@@ -24,8 +33,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private DeviceBuffer m_vertexBuffer;
         private DeviceBuffer m_indexBuffer;
         private uint m_indexCount;
-        
-        private TextureView m_surfaceTextureView;
+
+        private readonly Dictionary<SamplerIndex, Texture> m_textures = new Dictionary<SamplerIndex, Texture>();
+        private readonly Dictionary<SamplerIndex, TextureView> m_textureViews = new Dictionary<SamplerIndex, TextureView>();
 
         public BoundingBox BoundingBox { get; } 
 
@@ -43,7 +53,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_vertexBuffer.Dispose();
             m_indexBuffer.Dispose();
             m_worldBuffer.Dispose();
-            m_surfaceTextureView.Dispose();
+
+            foreach (var textureView in m_textureViews.Values)
+            {
+                textureView.Dispose();
+            }
+            m_textureViews.Clear();
 
             m_pipeline.Dispose();
             foreach (var shader in m_shaders)
@@ -52,16 +67,19 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             }
         }
 
-        public void SetTexture(uint samplerIndex, Texture texture)
+        public void SetTexture(SamplerIndex samplerIndex, Texture texture)
         {
+            texture.Name = samplerIndex.ToString();
             m_textures[samplerIndex] = texture;
         }
 
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
-            if (m_textures.TryGetValue(0, out var data))
+            foreach (var textureEntry in m_textures)
             {
-                m_surfaceTextureView = m_engine.ResourceFactory.CreateTextureView(data);
+                var textureView = m_engine.ResourceFactory.CreateTextureView(textureEntry.Value);
+                textureView.Name = $"TextureView_{textureEntry.Value.Name}";
+                m_textureViews[textureEntry.Key] = textureView;
             }
 
             var sizeInByes = vertices[0].GetSizeInBytes();
@@ -112,21 +130,60 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private Pipeline CreatePipeline(PBRRenderEngine engine, ObjectShader shader)
         {
             var factory = engine.ResourceFactory;
-            
+
+            var resourceLayouts = new List<ResourceLayout>();
+
             var projViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
                     new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
                 )
             );
+            resourceLayouts.Add(projViewLayout);
+            var projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
+                projViewLayout,
+                engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
+                engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
+            RegisterGraphicsResource(0, projViewSet);
 
             var worldLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
-                    new ResourceLayoutElementDescription("SurfaceTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("SurfaceSampler", ResourceKind.Sampler, ShaderStages.Fragment)
+                    new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
                 )
             );
+            resourceLayouts.Add(worldLayout);
+            var worldSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                worldLayout,
+                m_worldBuffer));
+            RegisterGraphicsResource(1, worldSet);
+
+            var resourceSet = 2u;
+            foreach (SamplerIndex samplerType in Enum.GetValues(typeof(SamplerIndex)))
+            {
+                var textureLayout = factory.CreateResourceLayout(
+                    new ResourceLayoutDescription(
+                        new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
+                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
+                    )
+                );
+                textureLayout.Name = $"TextureLayout_{samplerType}";
+                resourceLayouts.Add(textureLayout);
+
+                var currentSet = resourceSet;
+                resourceSet++;
+
+                if (!m_textureViews.TryGetValue(samplerType, out var textureView))
+                {
+                    textureView = m_textureViews[SamplerIndex.Diffuse]; // TODO: Default textures
+                }
+
+                var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                    textureLayout,
+                    engine.GraphicsDevice.Aniso4xSampler,
+                    textureView));
+                textureSet.Name = $"TextureSet_{samplerType}";
+                RegisterGraphicsResource(currentSet, textureSet);
+            }
 
             var pipelineDescription = new GraphicsPipelineDescription
             {
@@ -146,7 +203,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     scissorTestEnabled: false
                 ),
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
-                ResourceLayouts = new[] { projViewLayout, worldLayout },
+                ResourceLayouts = resourceLayouts.ToArray(),
                 ShaderSet = new ShaderSetDescription
                 (
                     vertexLayouts: new [] { shader.GetVertexLayout() },
@@ -154,19 +211,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 ),
                 Outputs = engine.Swapchain.Framebuffer.OutputDescription
             };
-
-            var projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
-                projViewLayout,
-                engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
-                engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
-            RegisterGraphicsResource(0, projViewSet);
-
-            var worldSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                worldLayout,
-                m_worldBuffer,
-                m_surfaceTextureView,
-                engine.GraphicsDevice.Aniso4xSampler));
-            RegisterGraphicsResource(1, worldSet);
 
             return factory.CreateGraphicsPipeline(pipelineDescription);
         }

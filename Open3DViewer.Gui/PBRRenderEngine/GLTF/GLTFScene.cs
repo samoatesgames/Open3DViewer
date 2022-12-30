@@ -147,23 +147,58 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             var boundingBox = BoundingBox.CreateFromPoints(transformedVertexPositions);
             gltfMesh = new GLTFMesh(engine, transform, boundingBox);
 
-            var diffuseTexture = primitive.Material?.GetDiffuseTexture();
-            if (diffuseTexture != null)
+            if (primitive.Material != null)
             {
-                var loadedTexture = LoadTexture(engine, diffuseTexture);
-                gltfMesh.SetTexture(0, loadedTexture);
+                foreach (var materialChannel in primitive.Material.Channels)
+                {
+                    if (materialChannel.Texture == null)
+                    {
+                        continue;
+                    }
+                    
+                    SamplerIndex samplerIndex;
+                    if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
+                    {
+                        samplerIndex = SamplerIndex.Diffuse;
+                    }
+                    else if (materialChannel.Key == "Normal")
+                    {
+                        samplerIndex = SamplerIndex.Normal;
+                    }
+                    else if (materialChannel.Key == "MetallicRoughness")
+                    {
+                        samplerIndex = SamplerIndex.MetallicRoughness;
+                    }
+                    else if (materialChannel.Key == "Emissive")
+                    {
+                        samplerIndex = SamplerIndex.Emissive;
+                    }
+                    else if (materialChannel.Key == "Occlusion")
+                    {
+                        samplerIndex = SamplerIndex.Occlusion;
+                    }
+                    else
+                    {
+                        // TODO: Log this unknown channel type so we can add support for it
+                        continue;
+                    }
+
+                    var loadedTexture = LoadTexture(engine, materialChannel.Texture);
+                    gltfMesh.SetTexture(samplerIndex, loadedTexture);
+                }
             }
 
             gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
             return true;
         }
 
-        private Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture diffuseTexture)
+        private Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture inputTexture)
         {
-            using (var stream = new MemoryStream(diffuseTexture.PrimaryImage.Content.Content.ToArray()))
+            using (var stream = new MemoryStream(inputTexture.PrimaryImage.Content.Content.ToArray()))
             {
-                var a = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
-                return a.CreateDeviceTexture(engine.GraphicsDevice, engine.ResourceFactory);
+                var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
+                var deviceTexture = imageSharpTexture.CreateDeviceTexture(engine.GraphicsDevice, engine.ResourceFactory);
+                return deviceTexture;
             }
         }
 
