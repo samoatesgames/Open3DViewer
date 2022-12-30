@@ -20,6 +20,7 @@ namespace Open3DViewer.Gui.ViewModel
         public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = new ObservableCollection<RecentFileViewModel>();
 
         public ICommand CommandFileOpen { get; }
+        public ICommand CommandFileSaveAs { get; }
         public ICommand CommandFileExit { get; }
         public ICommand CommandLoadExampleAsset { get; }
 
@@ -30,6 +31,7 @@ namespace Open3DViewer.Gui.ViewModel
             m_commandFileRecentOpen = new AsyncRelayCommand<string>(OpenFileByPath);
 
             CommandFileOpen = new AsyncRelayCommand(HandleFileOpen);
+            CommandFileSaveAs = new AsyncRelayCommand(HandleFileSaveAs);
             CommandFileExit = new RelayCommand(HandleFileExit);
             CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
 
@@ -126,6 +128,31 @@ namespace Open3DViewer.Gui.ViewModel
             }
 
             await OpenFileByPath(openFileDialog.FileName);
+        }
+
+        private async Task HandleFileSaveAs()
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Select a location to save your GLB to...",
+                Filter = "GLB file (*.glb)|*.glb",
+                OverwritePrompt = true
+            };
+            if (saveFileDialog.ShowDialog(Application.Current.MainWindow) != true)
+            {
+                return;
+            }
+
+            var model = m_renderEngine.ActiveScene?.ModelRoot;
+            if (model == null)
+            {
+                // TODO: Show error to user as nothing is currently loaded.
+                return;
+            }
+
+            model.SaveGLB(saveFileDialog.FileName);
+
+            await OpenFileByPath(saveFileDialog.FileName);
         }
 
         private void HandleFileExit()

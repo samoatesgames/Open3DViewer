@@ -21,6 +21,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         private long m_lastUpdate;
         
         private GLTFEntity m_entity;
+        public GLTFScene ActiveScene => m_entity?.Scene;
+
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
         public Swapchain Swapchain { get; private set; }

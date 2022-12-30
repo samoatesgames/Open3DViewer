@@ -42,10 +42,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         
         private readonly List<GLTFMesh> m_meshes = new List<GLTFMesh>();
 
+        public ModelRoot ModelRoot { get; }
         public BoundingBox BoundingBox { get; }
 
         private GLTFScene(PBRRenderEngine engine, ModelRoot modelRoot)
         {
+            ModelRoot = modelRoot;
+
             var sceneBounds = new BoundingBox();
 
             foreach (var node in modelRoot.LogicalNodes)
