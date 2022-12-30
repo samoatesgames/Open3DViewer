@@ -39,6 +39,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private readonly Dictionary<SamplerIndex, Texture> m_textures = new Dictionary<SamplerIndex, Texture>();
         private readonly Dictionary<SamplerIndex, TextureView> m_textureViews = new Dictionary<SamplerIndex, TextureView>();
 
+#if DEBUG
+        private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
+#endif
+
         public BoundingBox BoundingBox { get; } 
 
         public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox)
@@ -67,6 +71,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 shader.Dispose();
             }
+
+#if DEBUG
+            foreach (var watcher in m_shaderWatchers)
+            {
+                watcher.Dispose();
+            }
+            m_shaderWatchers.Clear();
+#endif
         }
 
         public void SetTexture(SamplerIndex samplerIndex, Texture texture)
@@ -145,6 +157,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             }
         }
 
+#if DEBUG
         private void WatchForShaderChanges(PBRRenderEngine engine, ObjectShader shader)
         {
             foreach (var shaderFile in new[]
@@ -172,8 +185,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     CreateShaders(engine.ResourceFactory, shader);
                     m_pipeline = CreatePipeline(engine, shader);
                 };
+                m_shaderWatchers.Add(watcher);
             }
         }
+#endif
 
         private Pipeline CreatePipeline(PBRRenderEngine engine, ObjectShader shader)
         {
