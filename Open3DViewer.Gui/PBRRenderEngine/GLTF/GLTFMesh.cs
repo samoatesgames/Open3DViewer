@@ -3,7 +3,9 @@ using Open3DViewer.Gui.PBRRenderEngine.Shaders;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
 using Vortice.Mathematics;
@@ -92,7 +94,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
 
             var shader = new ObjectShader();
-            m_shaders = CreateShaders(m_engine.ResourceFactory, shader);
+            CreateShaders(m_engine.ResourceFactory, shader);
+
+#if DEBUG
+            WatchForShaderChanges(m_engine, shader);
+#endif
+
             m_pipeline = CreatePipeline(m_engine, shader);
         }
 
@@ -113,18 +120,59 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             commandList.DrawIndexed(m_indexCount, 1, 0, 0, 0);
         }
 
-        private Shader[] CreateShaders(ResourceFactory factory, ObjectShader shader)
+        private void CreateShaders(ResourceFactory factory, ObjectShader shader)
         {
             var vertexShaderDesc = new ShaderDescription(
                 ShaderStages.Vertex,
-                shader.GetVertexShader(),
+                ShaderFileToBytes(shader.GetVertexShaderPath()),
                 "main");
             var fragmentShaderDesc = new ShaderDescription(
                 ShaderStages.Fragment,
-                shader.GetPixelShader(),
+                ShaderFileToBytes(shader.GetPixelShaderPath()),
                 "main");
 
-            return factory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
+            m_shaders = factory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
+        }
+
+        private byte[] ShaderFileToBytes(string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    return Encoding.UTF8.GetBytes(reader.ReadToEnd());
+                }
+            }
+        }
+
+        private void WatchForShaderChanges(PBRRenderEngine engine, ObjectShader shader)
+        {
+            foreach (var shaderFile in new[]
+                     {
+                         shader.GetVertexShaderPath(),
+                         shader.GetPixelShaderPath()
+                     })
+            {
+                var fileDirectory = Path.GetDirectoryName(shaderFile);
+                var file = Path.GetFileName(shaderFile);
+                var watcher = new FileSystemWatcher(fileDirectory, file)
+                {
+                    NotifyFilter = NotifyFilters.Attributes
+                                   | NotifyFilters.CreationTime
+                                   | NotifyFilters.DirectoryName
+                                   | NotifyFilters.FileName
+                                   | NotifyFilters.LastAccess
+                                   | NotifyFilters.LastWrite
+                                   | NotifyFilters.Security
+                                   | NotifyFilters.Size,
+                    EnableRaisingEvents = true
+                };
+                watcher.Changed += (sender, args) =>
+                {
+                    CreateShaders(engine.ResourceFactory, shader);
+                    m_pipeline = CreatePipeline(engine, shader);
+                };
+            }
         }
 
         private Pipeline CreatePipeline(PBRRenderEngine engine, ObjectShader shader)

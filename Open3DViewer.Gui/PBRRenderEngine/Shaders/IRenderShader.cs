@@ -4,8 +4,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Shaders
 {
     public interface IRenderShader
     {
-        byte[] GetVertexShader();
-        byte[] GetPixelShader();
+        string GetVertexShaderPath();
+        string GetPixelShaderPath();
         VertexLayoutDescription GetVertexLayout();
     }
 }
