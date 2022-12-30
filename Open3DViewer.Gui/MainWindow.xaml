@@ -6,12 +6,15 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:renderViewControl="clr-namespace:Open3DViewer.RenderViewControl;assembly=Open3DViewer.RenderViewControl"
              xmlns:viewModel="clr-namespace:Open3DViewer.Gui.ViewModel"
+             xmlns:converter="clr-namespace:Open3DViewer.Gui.Converter"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance viewModel:ApplicationViewModel}"
              Title="Open 3D Viewer"
              WindowStartupLocation="CenterScreen" Width="1280" Height="720">
     <ui:UiWindow.Resources>
         <ResourceDictionary>
+            <converter:DoesCollectionContainItemsConverter x:Key="Converter.DoesCollectionContainItems" />
+
             <Style x:Key="Style.Path.Icon" TargetType="{x:Type Path}">
                 <Setter Property="Fill" Value="{StaticResource TextFillColorPrimaryBrush}" />
                 <Setter Property="Stretch" Value="Uniform" />
@@ -51,6 +54,11 @@
             />
         </ResourceDictionary>
     </ui:UiWindow.Resources>
+
+    <ui:UiWindow.InputBindings>
+        <KeyBinding Command="{Binding Commands.CommandFileOpen}" Modifiers="Control" Key="O" />
+    </ui:UiWindow.InputBindings>
+
     <Grid>
 
         <Grid.RowDefinitions>
@@ -71,41 +79,58 @@
 
                 <!-- File Menu -->
                 <ui:MenuItem Header="File">
-                    <ui:MenuItem Header="Open" InputGestureText="Ctrl+O" Icon="{StaticResource Icon.File.Open}" Command="{Binding CommandFileOpen}" />
-                    <ui:MenuItem Header="Open Recent" IsEnabled="False">
-                        <ui:MenuItem Header="Empty" />
+                    <ui:MenuItem Header="Open" InputGestureText="Ctrl+O" Icon="{StaticResource Icon.File.Open}" Command="{Binding Commands.CommandFileOpen}" />
+                    <ui:MenuItem Header="Open Recent" 
+                                 IsEnabled="{Binding Commands.RecentFiles, Converter={StaticResource Converter.DoesCollectionContainItems}}"
+                                 ItemsSource="{Binding Commands.RecentFiles, Mode=OneWay}">
+                        <ui:MenuItem.Resources>
+                            <StackPanel x:Shared="false" x:Key="RecentFilesMenuItemHeader" 
+                                        d:DataContext="{d:DesignInstance viewModel:RecentFileViewModel}"
+                                        Orientation="Horizontal">
+                                <TextBlock Text="{Binding Path=FileName}" Margin="4,0" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Path=FilePath}" Foreground="{StaticResource TextFillColorDisabledBrush}" 
+                                           Margin="4,0" FontWeight="ExtraLight" />
+                            </StackPanel>
+                        </ui:MenuItem.Resources>
+                        <ui:MenuItem.ItemContainerStyle>
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Header" Value="{StaticResource RecentFilesMenuItemHeader}" />
+                                <Setter Property="Command" Value="{Binding Command}" />
+                                <Setter Property="CommandParameter" Value="{Binding FilePath}" />
+                            </Style>
+                        </ui:MenuItem.ItemContainerStyle>
                     </ui:MenuItem>
                     <Separator />
-                    <ui:MenuItem Header="Save as" InputGestureText="Ctrl+S" Icon="{StaticResource Icon.File.Save}" Command="{Binding CommandFileSaveAs}" />
-                    <ui:MenuItem Header="Export Image" InputGestureText="Ctrl+E" Icon="{StaticResource Icon.File.Export}" Command="{Binding CommandFileExportImage}" />
+                    <ui:MenuItem Header="Save as" InputGestureText="Ctrl+S" Icon="{StaticResource Icon.File.Save}" Command="{Binding Commands.CommandFileSaveAs}" />
+                    <ui:MenuItem Header="Export Image" InputGestureText="Ctrl+E" Icon="{StaticResource Icon.File.Export}" Command="{Binding Commands.CommandFileExportImage}" />
                     <Separator />
-                    <ui:MenuItem Header="Exit" InputGestureText="Alt+F4" Command="{Binding CommandFileExit}" />
+                    <ui:MenuItem Header="Exit" InputGestureText="Alt+F4" Command="{Binding Commands.CommandFileExit}" />
                 </ui:MenuItem>
 
                 <!-- Edit Menu -->
                 <ui:MenuItem Header="Edit">
-                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" Command="{Binding CommandEditCopy}" />
-                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" Command="{Binding CommandEditPaste}" />
+                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" Command="{Binding Commands.CommandEditCopy}" />
+                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" Command="{Binding Commands.CommandEditPaste}" />
                 </ui:MenuItem>
 
                 <!-- Tools Menu -->
                 <ui:MenuItem Header="Tools">
-                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" IsChecked="True" Command="{Binding CommandToolsEnvironmentAndLighting}" />
-                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" Command="{Binding CommandToolsStatsAndShading}" />
-                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" Command="{Binding CommandToolsGridAndViews}" />
+                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" IsChecked="True" Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" />
+                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" Command="{Binding Commands.CommandToolsStatsAndShading}" />
+                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" Command="{Binding Commands.CommandToolsGridAndViews}" />
                 </ui:MenuItem>
 
                 <!-- View Menu -->
                 <ui:MenuItem Header="View">
-                    <ui:MenuItem Header="Hide All Panels" InputGestureText="F9" Command="{Binding CommandViewHideAllPanels}" />
-                    <ui:MenuItem Header="Property Panel" IsCheckable="True" Command="{Binding CommandViewPropertyPanel}" />
-                    <ui:MenuItem Header="Animation Panel" IsCheckable="True" Command="{Binding CommandViewAnimationPanel}" />
-                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" Command="{Binding CommandViewGrid}" />
+                    <ui:MenuItem Header="Hide All Panels" InputGestureText="F9" Command="{Binding Commands.CommandViewHideAllPanels}" />
+                    <ui:MenuItem Header="Property Panel" IsCheckable="True" Command="{Binding Commands.CommandViewPropertyPanel}" />
+                    <ui:MenuItem Header="Animation Panel" IsCheckable="True" Command="{Binding Commands.CommandViewAnimationPanel}" />
+                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" Command="{Binding Commands.CommandViewGrid}" />
                     <Separator />
-                    <ui:MenuItem Header="Zoom In" InputGestureText="+" Command="{Binding CommandViewZoomIn}" />
-                    <ui:MenuItem Header="Zoom Out" InputGestureText="-" Command="{Binding CommandViewZoomOut}" />
+                    <ui:MenuItem Header="Zoom In" InputGestureText="+" Command="{Binding Commands.CommandViewZoomIn}" />
+                    <ui:MenuItem Header="Zoom Out" InputGestureText="-" Command="{Binding Commands.CommandViewZoomOut}" />
                     <Separator />
-                    <ui:MenuItem Header="Reset Camera" InputGestureText="Home" Command="{Binding CommandViewResetCamera}" />
+                    <ui:MenuItem Header="Reset Camera" InputGestureText="Home" Command="{Binding Commands.CommandViewResetCamera}" />
                     <Separator />
                     <ui:MenuItem Header="Shading" IsEnabled="False">
                         <ui:MenuItem Header="Empty" />
@@ -114,18 +139,18 @@
 
                 <!-- Help Menu -->
                 <ui:MenuItem Header="Help">
-                    <ui:MenuItem Header="Controls" InputGestureText="F1" Icon="{StaticResource Icon.Help.Controls}" Command="{Binding CommandHelpControls}" />
-                    <ui:MenuItem Header="Settings" Icon="{StaticResource Icon.Help.Settings}" Command="{Binding CommandHelpSettings}" />
-                    <ui:MenuItem Header="Feedback" Icon="{StaticResource Icon.Help.Feedback}" Command="{Binding CommandHelpFeedback}" />
+                    <ui:MenuItem Header="Controls" InputGestureText="F1" Icon="{StaticResource Icon.Help.Controls}" Command="{Binding Commands.CommandHelpControls}" />
+                    <ui:MenuItem Header="Settings" Icon="{StaticResource Icon.Help.Settings}" Command="{Binding Commands.CommandHelpSettings}" />
+                    <ui:MenuItem Header="Feedback" Icon="{StaticResource Icon.Help.Feedback}" Command="{Binding Commands.CommandHelpFeedback}" />
                 </ui:MenuItem>
             </Menu>
 
             <Menu Grid.Column="2" Background="{StaticResource SolidBackgroundFillColorBaseBrush}">
                 <ui:MenuItem Header="Example Assets" Icon="{StaticResource Icon.ExampleAssets}">
-                    <ui:MenuItem Header="Axes" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Axes/Axes.glb" />
-                    <ui:MenuItem Header="Box" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Box/Box.glb" />
-                    <ui:MenuItem Header="Helmet" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Helmet/Helmet.glb" />
-                    <ui:MenuItem Header="Lantern" Command="{Binding CommandLoadExampleAsset}" CommandParameter="Assets/Lantern/Lantern.glb" />
+                    <ui:MenuItem Header="Axes" Command="{Binding Commands.CommandLoadExampleAsset}" CommandParameter="Assets/Axes/Axes.glb" />
+                    <ui:MenuItem Header="Box" Command="{Binding Commands.CommandLoadExampleAsset}" CommandParameter="Assets/Box/Box.glb" />
+                    <ui:MenuItem Header="Helmet" Command="{Binding Commands.CommandLoadExampleAsset}" CommandParameter="Assets/Helmet/Helmet.glb" />
+                    <ui:MenuItem Header="Lantern" Command="{Binding Commands.CommandLoadExampleAsset}" CommandParameter="Assets/Lantern/Lantern.glb" />
                 </ui:MenuItem>
             </Menu>
         </Grid>

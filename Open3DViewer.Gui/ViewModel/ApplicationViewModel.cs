@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using System;
+using System.ComponentModel.Design;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -9,14 +10,14 @@ namespace Open3DViewer.Gui.ViewModel
     {
         private readonly PBRRenderEngine.PBRRenderEngine m_renderEngine;
 
-        public ICommand CommandLoadExampleAsset { get; }
+        public ApplicationCommands Commands { get; }
 
         public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine)
         {
             m_renderEngine = renderEngine;
             renderEngine.OnInitialized += RenderEngineOnOnInitialized;
 
-            CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
+            Commands = new ApplicationCommands(renderEngine);
         }
 
         private void RenderEngineOnOnInitialized(PBRRenderEngine.PBRRenderEngine engine)
@@ -33,14 +34,6 @@ namespace Open3DViewer.Gui.ViewModel
                 });
             }
             engine.OnInitialized -= RenderEngineOnOnInitialized;
-        }
-
-        private async Task HandleLoadExampleAsset(string exampleAssetPath)
-        {
-            if (!await m_renderEngine.TryLoadAssetAsync(exampleAssetPath))
-            {
-                // TODO: Show error message to user
-            }
         }
     }
 }
