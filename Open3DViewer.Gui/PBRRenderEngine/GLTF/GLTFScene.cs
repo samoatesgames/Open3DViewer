@@ -1,4 +1,5 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
+using Open3DViewer.Gui.PBRRenderEngine.Types;
 using SharpGLTF.Schema2;
 using System;
 using System.Collections.Concurrent;
@@ -7,10 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Veldrid;
 using Vortice.Mathematics;
-using Texture = SharpGLTF.Schema2.Texture;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
@@ -52,23 +51,38 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             ModelRoot = modelRoot;
 
-            var sceneBounds = new BoundingBox();
-
+            var primitiveMap = new Dictionary<MeshPrimitive, Node>();
             foreach (var node in modelRoot.LogicalNodes)
             {
-                if (node.Mesh != null)
+                if (node.Mesh == null)
                 {
-                    foreach (var primitive in node.Mesh.Primitives)
-                    {
-                        if (TryCreateRenderMesh(engine, primitive, node.LocalMatrix, out var gltfMesh))
-                        {
-                            sceneBounds = BoundingBox.CreateMerged(sceneBounds, gltfMesh.BoundingBox);
-                            m_meshes.Add(gltfMesh);
-                        }
-                    }
+                    continue;
+                }
+
+                foreach (var primitive in node.Mesh.Primitives)
+                {
+                    primitiveMap[primitive] = node;
                 }
             }
 
+            var createdMeshes = new ConcurrentBag<GLTFMesh>();
+            Parallel.ForEach(primitiveMap, primitiveEntry =>
+            {
+                var primitive = primitiveEntry.Key;
+                var node = primitiveEntry.Value;
+
+                if (TryCreateRenderMesh(engine, primitive, node.LocalMatrix, out var gltfMesh))
+                {
+                    createdMeshes.Add(gltfMesh);
+                }
+            });
+
+            var sceneBounds = new BoundingBox();
+            foreach (var mesh in createdMeshes)
+            {
+                sceneBounds = BoundingBox.CreateMerged(sceneBounds, mesh.BoundingBox);
+                m_meshes.Add(mesh);
+            }
             BoundingBox = sceneBounds;
         }
         
