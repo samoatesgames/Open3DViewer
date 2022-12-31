@@ -34,6 +34,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             m_engine = engine;
             m_worldBuffer = engine.ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            m_worldBuffer.Name = "World_Buffer";
 
             m_localTransform = localTransform;
             BoundingBox = boundingBox;
@@ -137,8 +138,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             var projViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex),
+                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "ProjectionBuffer_LayoutDescription"
+                    },
                     new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "ViewBuffer_LayoutDescription"
+                    }
                 )
             );
             resourceLayouts.Add(projViewLayout);
@@ -146,20 +153,24 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 projViewLayout,
                 engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
                 engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
+            projViewSet.Name = "ProjView_ResourceSet";
             RegisterGraphicsResource(0, projViewSet);
 
             var worldLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "WorldBuffer_LayoutDescription"
+                    }
                 )
             );
             resourceLayouts.Add(worldLayout);
             var worldSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
                 worldLayout,
                 m_worldBuffer));
+            worldSet.Name = "World_ResourceSet";
             RegisterGraphicsResource(1, worldSet);
-
-            var resourceSet = 2u;
+            
             foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
             {
                 if (samplerType != TextureSamplerIndex.Diffuse && samplerType != TextureSamplerIndex.Normal)
@@ -175,12 +186,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         new ResourceLayoutElementDescription($"{samplerType}Material", ResourceKind.UniformBuffer, ShaderStages.Fragment)
                     )
                 );
-                textureLayout.Name = $"TextureLayout_{samplerType}";
+                textureLayout.Name = $"{samplerType}_TextureLayout";
                 resourceLayouts.Add(textureLayout);
 
-                var currentSet = resourceSet;
-                resourceSet++;
-
+    
                 if (!m_textureViews.TryGetValue(samplerType, out var textureView))
                 {
                     textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
@@ -188,11 +197,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 
                 var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
                     textureLayout,
-                    engine.GraphicsDevice.Aniso4xSampler,
+                    engine.GraphicsDevice.LinearSampler,
                     textureView,
                     m_materialInfo[samplerType].Item2));
-                textureSet.Name = $"TextureSet_{samplerType}";
-                RegisterGraphicsResource(currentSet, textureSet);
+                textureSet.Name = $"{samplerType}_TextureSet";
+                RegisterGraphicsResource((uint)samplerType + 2, textureSet);
             }
 
             var pipelineDescription = new GraphicsPipelineDescription

@@ -5,7 +5,7 @@
         Diffuse = 0,
         Normal = 1,
         MetallicRoughness = 2,
-        Emissive = 4,
-        Occlusion = 8
+        Emissive = 3,
+        Occlusion = 4
     }
 }

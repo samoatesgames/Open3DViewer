@@ -35,7 +35,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
         {
             m_projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            m_projectionBuffer.Name = "CameraProjection_Buffer";
+
             m_viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
+            m_viewBuffer.Name = "CameraView_Buffer";
 
             engine.RegisterSharedResource(CoreSharedResource.ProjectionBuffer, m_projectionBuffer);
             engine.RegisterSharedResource(CoreSharedResource.ViewBuffer, m_viewBuffer);
