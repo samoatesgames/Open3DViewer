@@ -41,7 +41,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_vertexBuffer.Dispose();
             m_indexBuffer.Dispose();
             m_worldBuffer.Dispose();
-            
+
+#if DEBUG
+            m_engine.ShaderResourceManager.OnShaderReloaded -= OnShaderReloaded;
+#endif
+
             m_pipeline.Dispose();
         }
 
@@ -63,7 +67,22 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
             
             m_pipeline = CreatePipeline<ObjectShader>(m_engine);
+
+#if DEBUG
+            m_engine.ShaderResourceManager.OnShaderReloaded += OnShaderReloaded;
+#endif
         }
+
+#if DEBUG
+        private void OnShaderReloaded(IRenderShader shader)
+        {
+            if (!(shader is ObjectShader))
+            {
+                return;
+            }
+            m_pipeline = CreatePipeline<ObjectShader>(m_engine);
+        }
+#endif
 
         public virtual void Render(CommandList commandList, Matrix4x4 worldTransform)
         {

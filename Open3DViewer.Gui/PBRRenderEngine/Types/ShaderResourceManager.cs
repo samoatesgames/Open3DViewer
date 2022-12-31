@@ -14,9 +14,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         private readonly Dictionary<Type, Shader[]> m_shaderCache = new Dictionary<Type, Shader[]>();
         private readonly Dictionary<Type, VertexLayoutDescription[]> m_vertexLayoutCache = new Dictionary<Type, VertexLayoutDescription[]>();
 
-//#if DEBUG
-//        private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
-//#endif
+#if DEBUG
+        public delegate void ShaderReloaded(IRenderShader shader);
+        public event ShaderReloaded OnShaderReloaded;
+
+        private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
+#endif
 
         public ShaderResourceManager(PBRRenderEngine renderEngine)
         {
@@ -26,13 +29,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         public void Dispose()
         {
-//#if DEBUG
-//            foreach (var watcher in m_shaderWatchers)
-//            {
-//                watcher.Dispose();
-//            }
-//            m_shaderWatchers.Clear();
-//#endif
+#if DEBUG
+            foreach (var watcher in m_shaderWatchers)
+            {
+                watcher.Dispose();
+            }
+            m_shaderWatchers.Clear();
+#endif
 
             foreach (var shaders in m_shaderCache.Values)
             {
@@ -55,12 +58,35 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         private void LoadShaders()
         {
-            var objectShader = new ObjectShader();
-            m_shaderCache[objectShader.GetType()] = CompileShader(objectShader);
-            m_vertexLayoutCache[objectShader.GetType()] = new[] { objectShader.GetVertexLayout() };
+            foreach (var shader in new[]
+                     {
+                         new ObjectShader()
+                     })
+            {
+                LoadShader(shader);
+#if DEBUG
+                WatchForShaderChanges(shader);
+#endif
+            }
         }
 
-        private Shader[] CompileShader(ObjectShader shader)
+        private void LoadShader(IRenderShader shader)
+        {
+            try
+            {
+                var compiledShaders = CompileShader(shader);
+                var vertexLayouts = new[] { shader.GetVertexLayout() };
+                m_shaderCache[shader.GetType()] = compiledShaders;
+                m_vertexLayoutCache[shader.GetType()] = vertexLayouts;
+            }
+            catch
+            {
+                // TODO: Log out a shader compile issue
+            }
+
+        }
+
+        private Shader[] CompileShader(IRenderShader shader)
         {
             var vertexShaderDesc = new ShaderDescription(
                 ShaderStages.Vertex,
@@ -85,37 +111,42 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
             }
         }
 
-//#if DEBUG
-//        private void WatchForShaderChanges(PBRRenderEngine engine, ObjectShader shader)
-//        {
-//            foreach (var shaderFile in new[]
-//                     {
-//                         shader.GetVertexShaderPath(),
-//                         shader.GetPixelShaderPath()
-//                     })
-//            {
-//                var fileDirectory = Path.GetDirectoryName(shaderFile);
-//                var file = Path.GetFileName(shaderFile);
-//                var watcher = new FileSystemWatcher(fileDirectory, file)
-//                {
-//                    NotifyFilter = NotifyFilters.Attributes
-//                                   | NotifyFilters.CreationTime
-//                                   | NotifyFilters.DirectoryName
-//                                   | NotifyFilters.FileName
-//                                   | NotifyFilters.LastAccess
-//                                   | NotifyFilters.LastWrite
-//                                   | NotifyFilters.Security
-//                                   | NotifyFilters.Size,
-//                    EnableRaisingEvents = true
-//                };
-//                watcher.Changed += (sender, args) =>
-//                {
-//                    CreateShaders(engine.ResourceFactory, shader);
-//                    m_pipeline = CreatePipeline(engine, shader);
-//                };
-//                m_shaderWatchers.Add(watcher);
-//            }
-//        }
-//#endif
+#if DEBUG
+        private void WatchForShaderChanges(IRenderShader shader)
+        {
+            foreach (var shaderFile in new[]
+                     {
+                         shader.GetVertexShaderPath(),
+                         shader.GetPixelShaderPath()
+                     })
+            {
+                var fileDirectory = Path.GetDirectoryName(shaderFile);
+                if (fileDirectory == null)
+                {
+                    continue;
+                }
+
+                var file = Path.GetFileName(shaderFile);
+                var watcher = new FileSystemWatcher(fileDirectory, file)
+                {
+                    NotifyFilter = NotifyFilters.Attributes
+                                   | NotifyFilters.CreationTime
+                                   | NotifyFilters.DirectoryName
+                                   | NotifyFilters.FileName
+                                   | NotifyFilters.LastAccess
+                                   | NotifyFilters.LastWrite
+                                   | NotifyFilters.Security
+                                   | NotifyFilters.Size,
+                    EnableRaisingEvents = true
+                };
+                watcher.Changed += (sender, args) =>
+                {
+                    LoadShader(shader);
+                    OnShaderReloaded?.Invoke(shader);
+                };
+                m_shaderWatchers.Add(watcher);
+            }
+        }
+#endif
     }
 }

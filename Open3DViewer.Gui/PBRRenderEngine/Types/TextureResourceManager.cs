@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -12,8 +13,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         private readonly Dictionary<TextureSamplerIndex, Veldrid.TextureView> m_fallbackTextureViews
             = new Dictionary<TextureSamplerIndex, Veldrid.TextureView>();
 
-        private readonly Dictionary<string, Veldrid.TextureView> m_gltfTextureCache =
-            new Dictionary<string, Veldrid.TextureView>();
+        private readonly ConcurrentDictionary<string, Veldrid.TextureView> m_gltfTextureCache =
+            new ConcurrentDictionary<string, Veldrid.TextureView>();
 
         public TextureResourceManager(PBRRenderEngine engine)
         {
@@ -61,7 +62,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
             using (var stream = new MemoryStream(textureBytes, false))
             {
                 var texture = LoadTexture(stream);
-                m_gltfTextureCache[textureHash] = texture;
+
+                if (!m_gltfTextureCache.TryAdd(textureHash, texture))
+                {
+                    texture.Dispose();
+                    return m_gltfTextureCache[textureHash];
+                }
+                
                 return texture;
             }
         }
