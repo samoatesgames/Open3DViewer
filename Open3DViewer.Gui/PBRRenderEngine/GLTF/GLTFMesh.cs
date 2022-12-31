@@ -5,9 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using System.Text;
 using Veldrid;
-using Veldrid.SPIRV;
 using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
@@ -19,8 +17,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         
         private readonly DeviceBuffer m_worldBuffer;
         private readonly Matrix4x4 m_localTransform;
-
-        private Shader[] m_shaders;
+        
         private Pipeline m_pipeline;
         
         private DeviceBuffer m_vertexBuffer;
@@ -51,10 +48,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_worldBuffer.Dispose();
             
             m_pipeline.Dispose();
-            foreach (var shader in m_shaders)
-            {
-                shader.Dispose();
-            }
 
 #if DEBUG
             foreach (var watcher in m_shaderWatchers)
@@ -83,12 +76,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
 
             var shader = new ObjectShader();
-            CreateShaders(m_engine.ResourceFactory, shader);
-
-#if DEBUG
-            WatchForShaderChanges(m_engine, shader);
-#endif
-
             m_pipeline = CreatePipeline(m_engine, shader);
         }
 
@@ -108,64 +95,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             commandList.DrawIndexed(m_indexCount, 1, 0, 0, 0);
         }
-
-        private void CreateShaders(ResourceFactory factory, ObjectShader shader)
-        {
-            var vertexShaderDesc = new ShaderDescription(
-                ShaderStages.Vertex,
-                ShaderFileToBytes(shader.GetVertexShaderPath()),
-                "main");
-            var fragmentShaderDesc = new ShaderDescription(
-                ShaderStages.Fragment,
-                ShaderFileToBytes(shader.GetPixelShaderPath()),
-                "main");
-
-            m_shaders = factory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
-        }
-
-        private byte[] ShaderFileToBytes(string filePath)
-        {
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using (var reader = new StreamReader(stream))
-                {
-                    return Encoding.UTF8.GetBytes(reader.ReadToEnd());
-                }
-            }
-        }
-
-#if DEBUG
-        private void WatchForShaderChanges(PBRRenderEngine engine, ObjectShader shader)
-        {
-            foreach (var shaderFile in new[]
-                     {
-                         shader.GetVertexShaderPath(),
-                         shader.GetPixelShaderPath()
-                     })
-            {
-                var fileDirectory = Path.GetDirectoryName(shaderFile);
-                var file = Path.GetFileName(shaderFile);
-                var watcher = new FileSystemWatcher(fileDirectory, file)
-                {
-                    NotifyFilter = NotifyFilters.Attributes
-                                   | NotifyFilters.CreationTime
-                                   | NotifyFilters.DirectoryName
-                                   | NotifyFilters.FileName
-                                   | NotifyFilters.LastAccess
-                                   | NotifyFilters.LastWrite
-                                   | NotifyFilters.Security
-                                   | NotifyFilters.Size,
-                    EnableRaisingEvents = true
-                };
-                watcher.Changed += (sender, args) =>
-                {
-                    CreateShaders(engine.ResourceFactory, shader);
-                    m_pipeline = CreatePipeline(engine, shader);
-                };
-                m_shaderWatchers.Add(watcher);
-            }
-        }
-#endif
 
         private Pipeline CreatePipeline(PBRRenderEngine engine, ObjectShader shader)
         {
@@ -244,11 +173,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 ),
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
                 ResourceLayouts = resourceLayouts.ToArray(),
-                ShaderSet = new ShaderSetDescription
-                (
-                    vertexLayouts: new [] { shader.GetVertexLayout() },
-                    shaders: m_shaders
-                ),
+                ShaderSet = m_engine.ShaderResourceManager.GetShaderSet<ObjectShader>(),
                 Outputs = engine.Swapchain.Framebuffer.OutputDescription
             };
 

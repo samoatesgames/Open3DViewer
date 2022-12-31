@@ -24,6 +24,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public GLTFScene ActiveScene => m_entity?.Scene;
 
         public TextureResourceManager TextureResourceManager { get; private set; }
+        public ShaderResourceManager ShaderResourceManager { get; private set; }
 
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
@@ -42,40 +43,20 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             Swapchain = swapchain;
 
             TextureResourceManager = new TextureResourceManager(this);
+            ShaderResourceManager = new ShaderResourceManager(this);
 
             m_camera = new PerspectiveCamera(this, factory);
 
             OnInitialized?.Invoke(this);
         }
-        
-        public async Task<bool> TryLoadAssetAsync(string assetPath)
+
+        public void Dispose()
         {
-            if (m_entity != null)
-            {
-                m_camera.LookAt(null);
-                m_entity.Dispose();
-                m_entity = null;
-            }
-
-            GLTFScene gltfScene = null;
-            await Task.Run(() =>
-            {
-                if (!GLTFScene.TryLoad(this, assetPath, out gltfScene))
-                {
-                    gltfScene = null;
-                }
-            });
-
-            if (gltfScene == null)
-            {
-                return false;
-            }
-
-            m_entity = new GLTFEntity(gltfScene);
-            m_camera.LookAt(m_entity);
-            return true;
+            m_entity?.Dispose();
+            TextureResourceManager.Dispose();
+            ShaderResourceManager.Dispose();
         }
-
+        
         public void Render(CommandList commandList)
         {
             // TODO: Do a real fixed update as 'Render' is based on frame rate
@@ -89,7 +70,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_camera.GenerateCommands(commandList);
             m_entity?.Render(commandList);
         }
-
+        
         public void OnSwapchainResized(uint width, uint height)
         {
             m_camera.OnSwapchainResized(width, height);
@@ -125,14 +106,37 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_camera.OnKeyUp(control, args);
         }
 
-        public void Dispose()
-        {
-            m_entity?.Dispose();
-        }
-
         public void RegisterSharedResource(CoreSharedResource resourceType, BindableResource resource)
         {
             m_coreSharedResources[resourceType] = resource;
+        }
+
+        public async Task<bool> TryLoadAssetAsync(string assetPath)
+        {
+            if (m_entity != null)
+            {
+                m_camera.LookAt(null);
+                m_entity.Dispose();
+                m_entity = null;
+            }
+
+            GLTFScene gltfScene = null;
+            await Task.Run(() =>
+            {
+                if (!GLTFScene.TryLoad(this, assetPath, out gltfScene))
+                {
+                    gltfScene = null;
+                }
+            });
+
+            if (gltfScene == null)
+            {
+                return false;
+            }
+
+            m_entity = new GLTFEntity(gltfScene);
+            m_camera.LookAt(m_entity);
+            return true;
         }
 
         public BindableResource GetSharedResource(CoreSharedResource resourceType)

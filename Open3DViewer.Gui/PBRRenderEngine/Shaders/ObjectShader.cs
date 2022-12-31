@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
 using Veldrid;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.Shaders
