@@ -18,7 +18,6 @@ namespace Open3DViewer.Gui.ViewModel
         private readonly PBRRenderEngine.PBRRenderEngine m_renderEngine;
         private readonly RenderViewControl.RenderViewControl m_renderViewControl;
         private readonly ICommand m_commandFileRecentOpen;
-        private readonly Task m_loadRecentFileTask;
 
         public ObservableCollection<RecentFileViewModel> RecentFiles { get; } = new ObservableCollection<RecentFileViewModel>();
 
@@ -41,7 +40,7 @@ namespace Open3DViewer.Gui.ViewModel
             CommandFileExit = new RelayCommand(HandleFileExit);
             CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
 
-            m_loadRecentFileTask = LoadRecentFileFromFile();
+            _ = LoadRecentFileFromFile();
         }
 
         private async Task AddFileToRecentFiles(string filePath, bool saveToDisk = true)

@@ -3,7 +3,6 @@ using Open3DViewer.Gui.PBRRenderEngine.Shaders;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
 using Veldrid;
 using Vortice.Mathematics;
@@ -25,11 +24,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private uint m_indexCount;
 
         private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
-
-#if DEBUG
-        private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
-#endif
-
+        
         public BoundingBox BoundingBox { get; } 
 
         public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox)
@@ -48,14 +43,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_worldBuffer.Dispose();
             
             m_pipeline.Dispose();
-
-#if DEBUG
-            foreach (var watcher in m_shaderWatchers)
-            {
-                watcher.Dispose();
-            }
-            m_shaderWatchers.Clear();
-#endif
         }
 
         public void SetTexture(TextureSamplerIndex samplerIndex, TextureView textureView)
@@ -74,9 +61,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             m_engine.GraphicsDevice.UpdateBuffer(m_vertexBuffer, 0, vertices);
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
-
-            var shader = new ObjectShader();
-            m_pipeline = CreatePipeline(m_engine, shader);
+            
+            m_pipeline = CreatePipeline<ObjectShader>(m_engine);
         }
 
         public virtual void Render(CommandList commandList, Matrix4x4 worldTransform)
@@ -96,7 +82,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             commandList.DrawIndexed(m_indexCount, 1, 0, 0, 0);
         }
 
-        private Pipeline CreatePipeline(PBRRenderEngine engine, ObjectShader shader)
+        private Pipeline CreatePipeline<TShader>(PBRRenderEngine engine) where TShader : IRenderShader
         {
             var factory = engine.ResourceFactory;
 
@@ -173,7 +159,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 ),
                 PrimitiveTopology = PrimitiveTopology.TriangleList,
                 ResourceLayouts = resourceLayouts.ToArray(),
-                ShaderSet = m_engine.ShaderResourceManager.GetShaderSet<ObjectShader>(),
+                ShaderSet = m_engine.ShaderResourceManager.GetShaderSet<TShader>(),
                 Outputs = engine.Swapchain.Framebuffer.OutputDescription
             };
 

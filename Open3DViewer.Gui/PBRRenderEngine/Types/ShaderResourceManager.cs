@@ -14,6 +14,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         private readonly Dictionary<Type, Shader[]> m_shaderCache = new Dictionary<Type, Shader[]>();
         private readonly Dictionary<Type, VertexLayoutDescription[]> m_vertexLayoutCache = new Dictionary<Type, VertexLayoutDescription[]>();
 
+//#if DEBUG
+//        private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
+//#endif
+
         public ShaderResourceManager(PBRRenderEngine renderEngine)
         {
             m_renderEngine = renderEngine;
@@ -22,6 +26,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         public void Dispose()
         {
+//#if DEBUG
+//            foreach (var watcher in m_shaderWatchers)
+//            {
+//                watcher.Dispose();
+//            }
+//            m_shaderWatchers.Clear();
+//#endif
+
             foreach (var shaders in m_shaderCache.Values)
             {
                 foreach (var shader in shaders)
