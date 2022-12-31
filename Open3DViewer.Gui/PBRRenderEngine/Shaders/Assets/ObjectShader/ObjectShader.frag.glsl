@@ -1,18 +1,21 @@
 ﻿#version 450
 
-layout(set = 2, binding = 0) uniform sampler DiffuseSampler;
-layout(set = 2, binding = 1) uniform texture2D DiffuseTexture;
-layout(set = 2, binding = 2) uniform DiffuseMaterial
+layout(set = 2, binding = 2) uniform MaterialInfo
 {
     vec4 DiffuseTint;
+
+    vec3 DirectionalLightDirection;
+    float padding0;
+
+    vec3 DirectionalLightColor;
+    float padding1;
 };
 
-layout(set = 3, binding = 0) uniform sampler NormalSampler;
-layout(set = 3, binding = 1) uniform texture2D NormalTexture;
-layout(set = 3, binding = 2) uniform NormalMaterial
-{
-    vec4 NormalTint;
-};
+layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
+layout(set = 3, binding = 1) uniform texture2D DiffuseTexture;
+
+layout(set = 4, binding = 0) uniform sampler NormalSampler;
+layout(set = 4, binding = 1) uniform texture2D NormalTexture;
 
 layout(location = 0) in vec3 fsin_normal;
 layout(location = 1) in vec2 fsin_texCoords;
@@ -29,10 +32,8 @@ float lambert(vec3 N, vec3 L)
 
 void main()
 {
-    // TODO: Provide lights from buffers
-    vec3 lightDirection = normalize(vec3(-2,1,-4));
-    vec3 lightDiffuse = vec3(1.0, 1.0, 1.0);
-    vec3 lighting = lightDiffuse * lambert(fsin_normal, lightDirection);
+    // Calculate our basic lambert lighting
+    vec3 lighting = DirectionalLightColor * lambert(fsin_normal, DirectionalLightDirection.xyz);
 
     // TODO: Provide ambiant amount from buffer
     vec3 ambiantLight = vec3(0.8, 0.75, 0.7);
@@ -44,7 +45,7 @@ void main()
     // Extract the normal from the normal map  
     vec4 normalTexture = texture(sampler2D(NormalTexture, NormalSampler), fsin_texCoords);
     vec3 normal = normalize(normalTexture.rgb * 2.0 - 1.0);
-    float normalDiffuse = max(dot(normal, -lightDirection), 0.0);
+    float normalDiffuse = max(dot(normal, -DirectionalLightDirection), 0.0);
     vec3 bumpedDiffuse = normalDiffuse * diffuse.rgb;
     
     // Final result

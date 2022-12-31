@@ -178,14 +178,30 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             if (primitive.Material != null)
             {
                 var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
-                var samplerColors = new ConcurrentDictionary<TextureSamplerIndex, Vector4>();
-
+                var diffuseTintColor = Vector4.One;
+                
                 Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
                     TextureSamplerIndex samplerIndex;
                     if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
                     {
                         samplerIndex = TextureSamplerIndex.Diffuse;
+
+                        // See if we have a diffuse tint color
+                        foreach (var parameter in materialChannel.Parameters)
+                        {
+                            if (parameter.Name == "RGBA")
+                            {
+                                diffuseTintColor = (Vector4)parameter.Value;
+                                break;
+                            }
+                            
+                            if (parameter.Name == "RGB")
+                            {
+                                diffuseTintColor = new Vector4((Vector3)parameter.Value, 1.0f);
+                                break;
+                            }
+                        }
                     }
                     else if (materialChannel.Key == "Normal")
                     {
@@ -208,18 +224,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         // TODO: Log this unknown channel type so we can add support for it
                         return;
                     }
-
-                    foreach (var parameter in materialChannel.Parameters)
-                    {
-                        if (parameter.Name == "RGBA")
-                        {
-                            samplerColors[samplerIndex] = (Vector4)parameter.Value;
-                        }
-                        else if (parameter.Name == "RGB")
-                        {
-                            samplerColors[samplerIndex] = new Vector4((Vector3)parameter.Value, 1.0f);
-                        }
-                    }
                     
                     if (materialChannel.Texture != null)
                     {
@@ -228,14 +232,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     }
                 });
 
+                gltfMesh.SetDiffuseTint(diffuseTintColor);
                 foreach (var entry in loadedTextures)
                 {
                     gltfMesh.SetTexture(entry.Key, entry.Value);
-                }
-
-                foreach (var entry in samplerColors)
-                {
-                    gltfMesh.SetTextureTint(entry.Key, entry.Value);
                 }
             }
 

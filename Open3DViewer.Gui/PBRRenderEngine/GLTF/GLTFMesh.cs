@@ -25,9 +25,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private uint m_indexCount;
 
         private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
-        private readonly Dictionary<TextureSamplerIndex, Tuple<MaterialInfo, DeviceBuffer>> m_materialInfo 
-            = new Dictionary<TextureSamplerIndex, Tuple<MaterialInfo, DeviceBuffer>>();
-        
+
+        private MaterialInfo m_materialInfo;
+        private readonly DeviceBuffer m_materialInfoBuffer;
+
         public BoundingBox BoundingBox { get; } 
 
         public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox)
@@ -39,12 +40,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_localTransform = localTransform;
             BoundingBox = boundingBox;
 
-            foreach (TextureSamplerIndex samplerIndex in Enum.GetValues(typeof(TextureSamplerIndex)))
-            {
-                var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<MaterialInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
-                var materialBuffer = m_engine.ResourceFactory.CreateBuffer(bufferDescription);
-                m_materialInfo[samplerIndex] = new Tuple<MaterialInfo, DeviceBuffer>(new MaterialInfo(), materialBuffer);
-            }
+            m_materialInfo = MaterialInfo.Create();
+
+            var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<MaterialInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
+            m_materialInfoBuffer = m_engine.ResourceFactory.CreateBuffer(bufferDescription);
+            m_materialInfoBuffer.Name = "MaterialInfo_Buffer";
         }
 
         public void Dispose()
@@ -66,16 +66,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_textureViews[samplerIndex] = textureView;
         }
 
-        public void SetTextureTint(TextureSamplerIndex samplerIndex, Vector4 color)
+        public void SetDiffuseTint(Vector4 tintColor)
         {
-            var (existingMaterialInfo, materialBuffer) = m_materialInfo[samplerIndex];
-            m_materialInfo[samplerIndex] = new Tuple<MaterialInfo, DeviceBuffer>(
-                new MaterialInfo(existingMaterialInfo)
-                {
-                    Tint = color
-                },
-                materialBuffer
-                );
+            m_materialInfo.Tint = tintColor;
         }
 
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
@@ -112,11 +105,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             var transform = m_localTransform * worldTransform;
             commandList.UpdateBuffer(m_worldBuffer, 0, ref transform);
 
-            foreach (var entry in m_materialInfo)
-            {
-                var (materialInfo, buffer) = entry.Value;
-                commandList.UpdateBuffer(buffer, 0, ref materialInfo);
-            }
+            commandList.UpdateBuffer(m_materialInfoBuffer, 0, ref m_materialInfo);
 
             commandList.SetVertexBuffer(0, m_vertexBuffer);
             commandList.SetIndexBuffer(m_indexBuffer, IndexFormat.UInt16);
@@ -136,60 +125,39 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             var resourceLayouts = new List<ResourceLayout>();
 
-            var projViewLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                    {
-                        Name = "ProjectionBuffer_LayoutDescription"
-                    },
-                    new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                    {
-                        Name = "ViewBuffer_LayoutDescription"
-                    }
-                )
-            );
+            // Camera Project/View resources
+            CreateProjectionViewResources(engine, out var projViewLayout, out var projViewSet);
             resourceLayouts.Add(projViewLayout);
-            var projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
-                projViewLayout,
-                engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
-                engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
-            projViewSet.Name = "ProjView_ResourceSet";
             RegisterGraphicsResource(0, projViewSet);
 
-            var worldLayout = factory.CreateResourceLayout(
-                new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                    {
-                        Name = "WorldBuffer_LayoutDescription"
-                    }
-                )
-            );
+            // World matrix resources
+            CreateWorldMatrixResources(engine, out var worldLayout, out var worldSet);
             resourceLayouts.Add(worldLayout);
-            var worldSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                worldLayout,
-                m_worldBuffer));
-            worldSet.Name = "World_ResourceSet";
             RegisterGraphicsResource(1, worldSet);
             
+            // Material info resources
+            CreateMaterialInfoResource(engine, out var materialInfoLayout, out var materialInfoSet);
+            resourceLayouts.Add(materialInfoLayout);
+            RegisterGraphicsResource(2, materialInfoSet);
+
+            // Setup texture sampler resources
             foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
             {
                 if (samplerType != TextureSamplerIndex.Diffuse && samplerType != TextureSamplerIndex.Normal)
                 {
-                    // TODO: Support more than the diffuse
+                    // TODO: Support more than the diffuse and normal
                     continue;
                 }
 
                 var textureLayout = factory.CreateResourceLayout(
                     new ResourceLayoutDescription(
                         new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                        new ResourceLayoutElementDescription($"{samplerType}Material", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
                     )
                 );
                 textureLayout.Name = $"{samplerType}_TextureLayout";
                 resourceLayouts.Add(textureLayout);
 
-    
                 if (!m_textureViews.TryGetValue(samplerType, out var textureView))
                 {
                     textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
@@ -198,10 +166,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
                     textureLayout,
                     engine.GraphicsDevice.LinearSampler,
-                    textureView,
-                    m_materialInfo[samplerType].Item2));
+                    textureView));
                 textureSet.Name = $"{samplerType}_TextureSet";
-                RegisterGraphicsResource((uint)samplerType + 2, textureSet);
+                RegisterGraphicsResource((uint)samplerType + 3, textureSet);
             }
 
             var pipelineDescription = new GraphicsPipelineDescription
@@ -228,6 +195,68 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             };
 
             return factory.CreateGraphicsPipeline(pipelineDescription);
+        }
+
+        private void CreateWorldMatrixResources(PBRRenderEngine engine, out ResourceLayout worldLayout, out ResourceSet worldSet)
+        {
+            var factory = engine.ResourceFactory;
+
+            worldLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("WorldBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "WorldBuffer_LayoutDescription"
+                    }
+                )
+            );
+
+            worldSet = factory.CreateResourceSet(new ResourceSetDescription(
+                worldLayout,
+                m_worldBuffer));
+            worldSet.Name = "World_ResourceSet";
+        }
+
+        private void CreateMaterialInfoResource(PBRRenderEngine engine, out ResourceLayout materialInfoLayout, out ResourceSet materialInfoSet)
+        {
+            var factory = engine.ResourceFactory;
+
+            materialInfoLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("MaterialInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+                    {
+                        Name = "MaterialInfoBuffer_LayoutDescription"
+                    }
+                )
+            );
+
+            materialInfoSet = factory.CreateResourceSet(new ResourceSetDescription(
+                materialInfoLayout,
+                m_materialInfoBuffer));
+            materialInfoSet.Name = "MaterialInfo_ResourceSet";
+        }
+
+        private void CreateProjectionViewResources(PBRRenderEngine engine, out ResourceLayout projViewLayout, out ResourceSet projViewSet)
+        {
+            var factory = engine.ResourceFactory;
+
+            projViewLayout = factory.CreateResourceLayout(
+                new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "ProjectionBuffer_LayoutDescription"
+                    },
+                    new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    {
+                        Name = "ViewBuffer_LayoutDescription"
+                    }
+                )
+            );
+
+            projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
+                projViewLayout,
+                engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
+                engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
+            projViewSet.Name = "ProjView_ResourceSet";
         }
 
         private void RegisterGraphicsResource(uint slot, ResourceSet resourceSet)
