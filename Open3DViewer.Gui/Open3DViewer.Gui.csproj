@@ -46,6 +46,9 @@
     <StartupObject>Open3DViewer.Gui.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommunityToolkit.HighPerformance, Version=8.0.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommunityToolkit.HighPerformance.8.0.0\lib\netstandard2.0\CommunityToolkit.HighPerformance.dll</HintPath>
+    </Reference>
     <Reference Include="CommunityToolkit.Mvvm, Version=8.0.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
       <HintPath>..\packages\CommunityToolkit.Mvvm.8.0.0\lib\netstandard2.0\CommunityToolkit.Mvvm.dll</HintPath>
     </Reference>
@@ -261,6 +264,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
+    <Compile Include="PBRRenderEngine\Types\TextureResourceManager.cs" />
+    <Compile Include="PBRRenderEngine\Types\TextureSamplerIndex.cs" />
     <Compile Include="ViewModel\ApplicationCommands.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
     <Compile Include="ViewModel\RecentFileViewModel.cs" />

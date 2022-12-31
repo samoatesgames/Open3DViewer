@@ -23,6 +23,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         private GLTFEntity m_entity;
         public GLTFScene ActiveScene => m_entity?.Scene;
 
+        public TextureResourceManager TextureResourceManager { get; private set; }
+
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
         public Swapchain Swapchain { get; private set; }
@@ -39,11 +41,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             ResourceFactory = factory;
             Swapchain = swapchain;
 
+            TextureResourceManager = new TextureResourceManager(this);
+
             m_camera = new PerspectiveCamera(this, factory);
 
             OnInitialized?.Invoke(this);
         }
-
+        
         public async Task<bool> TryLoadAssetAsync(string assetPath)
         {
             if (m_entity != null)

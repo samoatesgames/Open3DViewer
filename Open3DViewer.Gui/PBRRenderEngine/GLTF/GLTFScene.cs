@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Veldrid;
 using Vortice.Mathematics;
 using Texture = SharpGLTF.Schema2.Texture;
@@ -167,26 +168,26 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         continue;
                     }
                     
-                    SamplerIndex samplerIndex;
+                    TextureSamplerIndex samplerIndex;
                     if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
                     {
-                        samplerIndex = SamplerIndex.Diffuse;
+                        samplerIndex = TextureSamplerIndex.Diffuse;
                     }
                     else if (materialChannel.Key == "Normal")
                     {
-                        samplerIndex = SamplerIndex.Normal;
+                        samplerIndex = TextureSamplerIndex.Normal;
                     }
                     else if (materialChannel.Key == "MetallicRoughness")
                     {
-                        samplerIndex = SamplerIndex.MetallicRoughness;
+                        samplerIndex = TextureSamplerIndex.MetallicRoughness;
                     }
                     else if (materialChannel.Key == "Emissive")
                     {
-                        samplerIndex = SamplerIndex.Emissive;
+                        samplerIndex = TextureSamplerIndex.Emissive;
                     }
                     else if (materialChannel.Key == "Occlusion")
                     {
-                        samplerIndex = SamplerIndex.Occlusion;
+                        samplerIndex = TextureSamplerIndex.Occlusion;
                     }
                     else
                     {
@@ -194,28 +195,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         continue;
                     }
 
-                    var loadedTexture = LoadTexture(engine, materialChannel.Texture);
+                    var loadedTexture = engine.TextureResourceManager.LoadTexture(materialChannel.Texture);
                     gltfMesh.SetTexture(samplerIndex, loadedTexture);
                 }
             }
 
             gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
             return true;
-        }
-
-        public static Veldrid.Texture LoadTexture(PBRRenderEngine engine, Texture inputTexture)
-        {
-            using (var stream = new MemoryStream(inputTexture.PrimaryImage.Content.Content.ToArray()))
-            {
-                return LoadTexture(engine, stream);
-            }
-        }
-
-        public static Veldrid.Texture LoadTexture(PBRRenderEngine engine, Stream stream)
-        {
-            var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
-            var deviceTexture = imageSharpTexture.CreateDeviceTexture(engine.GraphicsDevice, engine.ResourceFactory);
-            return deviceTexture;
         }
 
         public void Render(CommandList commandList, Matrix4x4 worldTransform)

@@ -12,15 +12,6 @@ using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
-    public enum SamplerIndex : uint
-    {
-        Diffuse = 0,
-        Normal = 1,
-        MetallicRoughness = 2,
-        Emissive = 4,
-        Occlusion = 8
-    }
-
     public class GLTFMesh : IDisposable
     {
         private readonly PBRRenderEngine m_engine;
@@ -36,9 +27,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private DeviceBuffer m_indexBuffer;
         private uint m_indexCount;
 
-        private readonly Dictionary<SamplerIndex, Texture> m_textures = new Dictionary<SamplerIndex, Texture>();
-        private readonly Dictionary<SamplerIndex, TextureView> m_textureViews = new Dictionary<SamplerIndex, TextureView>();
-        private readonly Dictionary<SamplerIndex, TextureView> m_fallbackTextureViews = new Dictionary<SamplerIndex, TextureView>();
+        private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
 
 #if DEBUG
         private readonly List<FileSystemWatcher> m_shaderWatchers = new List<FileSystemWatcher>();
@@ -60,19 +49,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_vertexBuffer.Dispose();
             m_indexBuffer.Dispose();
             m_worldBuffer.Dispose();
-
-            foreach (var textureView in m_textureViews.Values)
-            {
-                textureView.Dispose();
-            }
-            m_textureViews.Clear();
-
-            foreach (var textureView in m_fallbackTextureViews.Values)
-            {
-                textureView.Dispose();
-            }
-            m_fallbackTextureViews.Clear();
-
+            
             m_pipeline.Dispose();
             foreach (var shader in m_shaders)
             {
@@ -88,30 +65,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 #endif
         }
 
-        public void SetTexture(SamplerIndex samplerIndex, Texture texture)
+        public void SetTexture(TextureSamplerIndex samplerIndex, TextureView textureView)
         {
-            texture.Name = samplerIndex.ToString();
-            m_textures[samplerIndex] = texture;
+            textureView.Name = $"TextureView_{samplerIndex}";
+            m_textureViews[samplerIndex] = textureView;
         }
 
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
-            foreach (var textureEntry in m_textures)
-            {
-                var textureView = m_engine.ResourceFactory.CreateTextureView(textureEntry.Value);
-                textureView.Name = $"TextureView_{textureEntry.Value.Name}";
-                m_textureViews[textureEntry.Key] = textureView;
-            }
-
-            // TODO: This should be done once for the entire application, not per mesh
-            using (var stream = new FileStream("Assets/Fallback Assets/DefaultDiffuseMap.png", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                var defaultDiffuseTextureView = m_engine.ResourceFactory.CreateTextureView(GLTFScene.LoadTexture(m_engine, stream));
-                defaultDiffuseTextureView.Name = $"DefaultTextureView_{SamplerIndex.Diffuse}";
-                m_fallbackTextureViews[SamplerIndex.Diffuse] = defaultDiffuseTextureView;
-            }
-            // TODO: End of todo
-
             var sizeInByes = vertices[0].GetSizeInBytes();
             m_indexCount = (uint)indices.Length;
 
@@ -237,7 +198,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             RegisterGraphicsResource(1, worldSet);
 
             var resourceSet = 2u;
-            foreach (SamplerIndex samplerType in Enum.GetValues(typeof(SamplerIndex)))
+            foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
             {
                 var textureLayout = factory.CreateResourceLayout(
                     new ResourceLayoutDescription(
@@ -253,7 +214,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
                 if (!m_textureViews.TryGetValue(samplerType, out var textureView))
                 {
-                    textureView = m_fallbackTextureViews[SamplerIndex.Diffuse];
+                    textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
                 }
 
                 var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
