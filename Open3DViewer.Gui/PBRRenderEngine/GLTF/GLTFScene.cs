@@ -1,10 +1,12 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
 using SharpGLTF.Schema2;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Veldrid;
 using Vortice.Mathematics;
@@ -161,13 +163,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             if (primitive.Material != null)
             {
-                foreach (var materialChannel in primitive.Material.Channels)
+                var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
+                Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
                     if (materialChannel.Texture == null)
                     {
-                        continue;
+                        return;
                     }
-                    
+
                     TextureSamplerIndex samplerIndex;
                     if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
                     {
@@ -192,11 +195,16 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     else
                     {
                         // TODO: Log this unknown channel type so we can add support for it
-                        continue;
+                        return;
                     }
 
                     var loadedTexture = engine.TextureResourceManager.LoadTexture(materialChannel.Texture);
-                    gltfMesh.SetTexture(samplerIndex, loadedTexture);
+                    loadedTextures[samplerIndex] = loadedTexture;
+                });
+
+                foreach (var entry in loadedTextures)
+                {
+                    gltfMesh.SetTexture(entry.Key, entry.Value);
                 }
             }
 
