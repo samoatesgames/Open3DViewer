@@ -4,6 +4,7 @@ using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Veldrid;
 using Vortice.Mathematics;
 
@@ -24,6 +25,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private uint m_indexCount;
 
         private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
+        private readonly Dictionary<TextureSamplerIndex, Tuple<MaterialInfo, DeviceBuffer>> m_materialInfo 
+            = new Dictionary<TextureSamplerIndex, Tuple<MaterialInfo, DeviceBuffer>>();
         
         public BoundingBox BoundingBox { get; } 
 
@@ -34,6 +37,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             m_localTransform = localTransform;
             BoundingBox = boundingBox;
+
+            foreach (TextureSamplerIndex samplerIndex in Enum.GetValues(typeof(TextureSamplerIndex)))
+            {
+                var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<MaterialInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
+                var materialBuffer = m_engine.ResourceFactory.CreateBuffer(bufferDescription);
+                m_materialInfo[samplerIndex] = new Tuple<MaterialInfo, DeviceBuffer>(new MaterialInfo(), materialBuffer);
+            }
         }
 
         public void Dispose()
@@ -53,6 +63,18 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             textureView.Name = $"TextureView_{samplerIndex}";
             m_textureViews[samplerIndex] = textureView;
+        }
+
+        public void SetTextureTint(TextureSamplerIndex samplerIndex, Vector4 color)
+        {
+            var (existingMaterialInfo, materialBuffer) = m_materialInfo[samplerIndex];
+            m_materialInfo[samplerIndex] = new Tuple<MaterialInfo, DeviceBuffer>(
+                new MaterialInfo(existingMaterialInfo)
+                {
+                    Tint = color
+                },
+                materialBuffer
+                );
         }
 
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
@@ -88,6 +110,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             var transform = m_localTransform * worldTransform;
             commandList.UpdateBuffer(m_worldBuffer, 0, ref transform);
+
+            foreach (var entry in m_materialInfo)
+            {
+                var (materialInfo, buffer) = entry.Value;
+                commandList.UpdateBuffer(buffer, 0, ref materialInfo);
+            }
 
             commandList.SetVertexBuffer(0, m_vertexBuffer);
             commandList.SetIndexBuffer(m_indexBuffer, IndexFormat.UInt16);
@@ -134,10 +162,17 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             var resourceSet = 2u;
             foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
             {
+                if (samplerType != TextureSamplerIndex.Diffuse && samplerType != TextureSamplerIndex.Normal)
+                {
+                    // TODO: Support more than the diffuse
+                    continue;
+                }
+
                 var textureLayout = factory.CreateResourceLayout(
                     new ResourceLayoutDescription(
                         new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
+                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                        new ResourceLayoutElementDescription($"{samplerType}Material", ResourceKind.UniformBuffer, ShaderStages.Fragment)
                     )
                 );
                 textureLayout.Name = $"TextureLayout_{samplerType}";
@@ -150,11 +185,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 {
                     textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
                 }
-
+                
                 var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
                     textureLayout,
                     engine.GraphicsDevice.Aniso4xSampler,
-                    textureView));
+                    textureView,
+                    m_materialInfo[samplerType].Item2));
                 textureSet.Name = $"TextureSet_{samplerType}";
                 RegisterGraphicsResource(currentSet, textureSet);
             }

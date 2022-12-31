@@ -178,13 +178,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             if (primitive.Material != null)
             {
                 var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
+                var samplerColors = new ConcurrentDictionary<TextureSamplerIndex, Vector4>();
+
                 Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
-                    if (materialChannel.Texture == null)
-                    {
-                        return;
-                    }
-
                     TextureSamplerIndex samplerIndex;
                     if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
                     {
@@ -194,31 +191,51 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     {
                         samplerIndex = TextureSamplerIndex.Normal;
                     }
-                    else if (materialChannel.Key == "MetallicRoughness")
-                    {
-                        samplerIndex = TextureSamplerIndex.MetallicRoughness;
-                    }
-                    else if (materialChannel.Key == "Emissive")
-                    {
-                        samplerIndex = TextureSamplerIndex.Emissive;
-                    }
-                    else if (materialChannel.Key == "Occlusion")
-                    {
-                        samplerIndex = TextureSamplerIndex.Occlusion;
-                    }
+                    //else if (materialChannel.Key == "MetallicRoughness")
+                    //{
+                    //    samplerIndex = TextureSamplerIndex.MetallicRoughness;
+                    //}
+                    //else if (materialChannel.Key == "Emissive")
+                    //{
+                    //    samplerIndex = TextureSamplerIndex.Emissive;
+                    //}
+                    //else if (materialChannel.Key == "Occlusion")
+                    //{
+                    //    samplerIndex = TextureSamplerIndex.Occlusion;
+                    //}
                     else
                     {
                         // TODO: Log this unknown channel type so we can add support for it
                         return;
                     }
 
-                    var loadedTexture = engine.TextureResourceManager.LoadTexture(materialChannel.Texture);
-                    loadedTextures[samplerIndex] = loadedTexture;
+                    foreach (var parameter in materialChannel.Parameters)
+                    {
+                        if (parameter.Name == "RGBA")
+                        {
+                            samplerColors[samplerIndex] = (Vector4)parameter.Value;
+                        }
+                        else if (parameter.Name == "RGB")
+                        {
+                            samplerColors[samplerIndex] = new Vector4((Vector3)parameter.Value, 1.0f);
+                        }
+                    }
+                    
+                    if (materialChannel.Texture != null)
+                    {
+                        var loadedTexture = engine.TextureResourceManager.LoadTexture(materialChannel.Texture);
+                        loadedTextures[samplerIndex] = loadedTexture;
+                    }
                 });
 
                 foreach (var entry in loadedTextures)
                 {
                     gltfMesh.SetTexture(entry.Key, entry.Value);
+                }
+
+                foreach (var entry in samplerColors)
+                {
+                    gltfMesh.SetTextureTint(entry.Key, entry.Value);
                 }
             }
 
