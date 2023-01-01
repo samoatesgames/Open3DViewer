@@ -59,6 +59,9 @@
         <KeyBinding Command="{Binding Commands.CommandFileOpen}" Modifiers="Control" Key="O" />
         <KeyBinding Command="{Binding Commands.CommandFileSaveAs}" Modifiers="Control" Key="S" />
         <KeyBinding Command="{Binding Commands.CommandFileExportImage}" Modifiers="Control" Key="E" />
+
+        <KeyBinding Command="{Binding Commands.CommandEditCopy}" Modifiers="Control" Key="C" />
+        <KeyBinding Command="{Binding Commands.CommandEditPaste}" Modifiers="Control" Key="V" />
     </ui:UiWindow.InputBindings>
 
     <Grid>
@@ -111,8 +114,8 @@
 
                 <!-- Edit Menu -->
                 <ui:MenuItem Header="Edit">
-                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" IsEnabled="False" Command="{Binding Commands.CommandEditCopy}" />
-                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" IsEnabled="False" Command="{Binding Commands.CommandEditPaste}" />
+                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" Command="{Binding Commands.CommandEditCopy}" />
+                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" Command="{Binding Commands.CommandEditPaste}" />
                 </ui:MenuItem>
 
                 <!-- Tools Menu -->

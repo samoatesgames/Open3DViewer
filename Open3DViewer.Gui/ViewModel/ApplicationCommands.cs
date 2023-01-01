@@ -27,6 +27,9 @@ namespace Open3DViewer.Gui.ViewModel
         public ICommand CommandFileExit { get; }
         public ICommand CommandLoadExampleAsset { get; }
 
+        public ICommand CommandEditCopy { get; }
+        public ICommand CommandEditPaste{ get; }
+
         public ICommand CommandViewZoomIn { get; }
         public ICommand CommandViewZoomOut { get; }
         public ICommand CommandViewResetCamera { get; }
@@ -43,6 +46,9 @@ namespace Open3DViewer.Gui.ViewModel
             CommandFileExportImage = new AsyncRelayCommand(HandleFileExportImage);
             CommandFileExit = new RelayCommand(HandleFileExit);
             CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
+
+            CommandEditCopy = new RelayCommand(HandleEditCopy);
+            CommandEditPaste = new AsyncRelayCommand(HandleEditPaste);
 
             CommandViewZoomIn = new RelayCommand(HandleViewZoomIn);
             CommandViewZoomOut = new RelayCommand(HandleViewZoomOut);
@@ -224,6 +230,64 @@ namespace Open3DViewer.Gui.ViewModel
             if (!await m_renderEngine.TryLoadAssetAsync(exampleAssetPath))
             {
                 // TODO: Show error message to user
+            }
+        }
+
+        private void HandleEditCopy()
+        {
+            var model = m_renderEngine.ActiveScene?.ModelRoot;
+            if (model == null)
+            {
+                // TODO: Show error to user as nothing is currently loaded.
+                return;
+            }
+
+            var tempFile = Path.ChangeExtension(Path.GetTempFileName(), ".gltf");
+            try
+            {
+                model.SaveGLTF(tempFile);
+
+                var contents = File.ReadAllText(tempFile);
+                Clipboard.SetText(contents);
+            }
+            catch
+            {
+                // TODO: Show error about copying failing
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(tempFile);
+                }
+                catch { /* ignored */ }
+            }
+        }
+
+        private async Task HandleEditPaste()
+        {
+            var tempFile = Path.ChangeExtension(Path.GetTempFileName(), ".gltf");
+            try
+            {
+                var contents = Clipboard.GetText();
+                File.WriteAllText(tempFile, contents);
+
+                if (!await m_renderEngine.TryLoadAssetAsync(tempFile))
+                {
+                    // TODO: Show error about failing to load
+                }
+            }
+            catch
+            {
+                // TODO: Show error about pasting failing
+            }
+            finally
+            {
+                try
+                {
+                    File.Delete(tempFile);
+                }
+                catch { /* ignored */ }
             }
         }
 
