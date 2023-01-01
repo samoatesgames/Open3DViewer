@@ -27,6 +27,10 @@ namespace Open3DViewer.Gui.ViewModel
         public ICommand CommandFileExit { get; }
         public ICommand CommandLoadExampleAsset { get; }
 
+        public ICommand CommandViewZoomIn { get; }
+        public ICommand CommandViewZoomOut { get; }
+        public ICommand CommandViewResetCamera { get; }
+
         public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             m_renderEngine = renderEngine;
@@ -39,6 +43,10 @@ namespace Open3DViewer.Gui.ViewModel
             CommandFileExportImage = new AsyncRelayCommand(HandleFileExportImage);
             CommandFileExit = new RelayCommand(HandleFileExit);
             CommandLoadExampleAsset = new AsyncRelayCommand<string>(HandleLoadExampleAsset);
+
+            CommandViewZoomIn = new RelayCommand(HandleViewZoomIn);
+            CommandViewZoomOut = new RelayCommand(HandleViewZoomOut);
+            CommandViewResetCamera = new RelayCommand(HandleViewResetCamera);
 
             _ = LoadRecentFileFromFile();
         }
@@ -217,6 +225,21 @@ namespace Open3DViewer.Gui.ViewModel
             {
                 // TODO: Show error message to user
             }
+        }
+
+        private void HandleViewZoomIn()
+        {
+            m_renderEngine.Camera.ZoomIn();
+        }
+
+        private void HandleViewZoomOut()
+        {
+            m_renderEngine.Camera.ZoomOut();
+        }
+
+        private void HandleViewResetCamera()
+        {
+            m_renderEngine.Camera.ResetCamera();
         }
     }
 }

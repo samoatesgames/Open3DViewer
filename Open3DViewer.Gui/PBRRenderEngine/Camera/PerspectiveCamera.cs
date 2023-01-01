@@ -110,16 +110,26 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
             if (args.Key == Key.OemPlus || args.Key == Key.Add)
             {
-                m_zoomDelta += (m_entitySize * 0.01f);
+                ZoomIn();
             }
             else if (args.Key == Key.OemMinus || args.Key == Key.Subtract)
             {
-                m_zoomDelta -= (m_entitySize * 0.01f);
+                ZoomOut();
             }
             else if (args.Key == Key.Home)
             {
                 ResetCamera();
             }
+        }
+
+        public void ZoomIn()
+        {
+            m_zoomDelta += (m_entitySize * 0.01f);
+        }
+
+        public void ZoomOut()
+        {
+            m_zoomDelta -= (m_entitySize * 0.01f);
         }
 
         public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
@@ -162,7 +172,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             ResetCamera();
         }
 
-        private void ResetCamera()
+        public void ResetCamera()
         {
             Position = Vector3.UnitZ * -5f;
             m_yawRotation = -0.5f;

@@ -110,7 +110,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             var transform = m_localTransform * worldTransform;
             commandList.UpdateBuffer(m_worldBuffer, 0, ref transform);
 
-            m_materialInfo.CameraPosition = m_engine.CameraPosition;
+            m_materialInfo.CameraPosition = m_engine.Camera.Position;
             commandList.UpdateBuffer(m_materialInfoBuffer, 0, ref m_materialInfo);
 
             commandList.SetVertexBuffer(0, m_vertexBuffer);
