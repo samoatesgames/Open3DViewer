@@ -101,6 +101,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public void OnKeyDown(RenderViewControl.RenderViewControl control, KeyEventArgs args)
         {
             m_camera.OnKeyDown(control, args);
+
+            var shadingMode = args.Key - Key.D1;
+            if (shadingMode >= 0 && shadingMode < 10)
+            {
+                m_entity?.SetShadingMode((ShadingModes)shadingMode);
+            }
         }
 
         public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)

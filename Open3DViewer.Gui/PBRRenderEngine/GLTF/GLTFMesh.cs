@@ -71,6 +71,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.Tint = tintColor;
         }
 
+        public void SetShadingMode(ShadingModes shadingMode)
+        {
+            m_materialInfo.ShadingMode = shadingMode;
+        }
+
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();

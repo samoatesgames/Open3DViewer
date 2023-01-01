@@ -15,6 +15,11 @@ layout(set = 2, binding = 0) uniform MaterialInfo
 
     vec3 CameraPosition;
     float padding3;
+
+    uint ShadingMode;
+    uint padding4;
+    uint padding5;
+    uint padding6;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
@@ -40,8 +45,8 @@ float lambert(vec3 N, vec3 L)
 void main()
 {
     // Calculate our basic lambert lighting
-    vec3 lighting = DirectionalLightColor * lambert(fsin_normal, DirectionalLightDirection);
-
+    vec3 lighting = clamp(AmbientLightColor + DirectionalLightColor * lambert(fsin_normal, DirectionalLightDirection), 0, 10);
+    
     // Diffuse color
     vec4 diffuseTexture = texture(sampler2D(DiffuseTexture, DiffuseSampler), fsin_texCoords);
     vec4 diffuse = diffuseTexture * DiffuseTint;
@@ -67,17 +72,39 @@ void main()
     vec3 bumpedDiffuse = normalDiffuse * diffuse.rgb;
     
     // Final result
-    vec3 final = (clamp(AmbientLightColor + lighting, 0, 10) * bumpedDiffuse) + specColor;
+    vec3 final = (lighting * bumpedDiffuse) + specColor;
     vec3 result = final;
     
-    // [Debug] Draw Diffuse Map Only
-    //result = (final - final) + diffuseTexture.rgb;
-
-    // [Debug] Draw Normal Map Only
-    //result = (final - final) + normalTexture.rgb;
-    
-    // [Debug] Specular only
-    //result = (final - final) + specColor;
+    if (ShadingMode == 1)
+    {
+        // [Debug] Draw Diffuse Map Only
+        result = (final - final) + diffuseTexture.rgb;
+    }
+    else if (ShadingMode == 2)
+    {
+        // [Debug] Draw Normal Map Only
+        result = (final - final) + normalTexture.rgb;
+    }
+    else if (ShadingMode == 3)
+    {
+        // [Debug] Lighting only
+        result = (final - final) + lighting;
+    }
+    else if (ShadingMode == 4)
+    {
+        // [Debug] Specular only
+        result = (final - final) + specColor;
+    }
+    else if (ShadingMode == 5)
+    {
+        // [Debug] Vertex Normal
+        result = (final - final) + fsin_normal;
+    }
+    else if (ShadingMode == 6)
+    {
+        // [Debug] Vertex TexCoords
+        result = (final - final) + vec3(fsin_texCoords, 0);
+    }
 
     fsout_color = vec4(result, 1);
 }

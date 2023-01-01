@@ -243,6 +243,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             return true;
         }
 
+        public void SetShadingMode(ShadingModes shadingMode)
+        {
+            foreach (var mesh in m_meshes)
+            {
+                mesh.SetShadingMode(shadingMode);
+            }
+        }
+
         public void Render(CommandList commandList, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)

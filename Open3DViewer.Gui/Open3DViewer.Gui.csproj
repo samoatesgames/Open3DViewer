@@ -266,6 +266,7 @@
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
     <Compile Include="PBRRenderEngine\Types\MaterialInfo.cs" />
     <Compile Include="PBRRenderEngine\Types\ShaderResourceManager.cs" />
+    <Compile Include="PBRRenderEngine\Types\ShadingModes.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureResourceManager.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureSamplerIndex.cs" />
     <Compile Include="PBRRenderEngine\Types\ViewProjectionInfo.cs" />

@@ -20,6 +20,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         public Vector3 CameraPosition;
         public float Padding3;
 
+        public ShadingModes ShadingMode;
+        public uint Padding4;
+        public uint Padding5;
+        public uint Padding6;
+
         public static MaterialInfo Create()
         {
             return new MaterialInfo
@@ -32,7 +37,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 DirectionalLightColor = Vector3.One,
                 Padding2 = 0.0f,
                 CameraPosition = Vector3.UnitZ,
-                Padding3 = 0.0f
+                Padding3 = 0.0f,
+                ShadingMode = ShadingModes.Default
             };
         }
     }
