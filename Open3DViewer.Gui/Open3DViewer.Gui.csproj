@@ -263,6 +263,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converter\ActiveApplicationTabToBoolConverter.cs" />
+    <Compile Include="Converter\ActiveApplicationTabToVisibilityConverter.cs" />
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
     <Compile Include="PBRRenderEngine\Types\MaterialInfo.cs" />
     <Compile Include="PBRRenderEngine\Types\ShaderResourceManager.cs" />
@@ -271,6 +273,7 @@
     <Compile Include="PBRRenderEngine\Types\TextureSamplerIndex.cs" />
     <Compile Include="PBRRenderEngine\Types\ViewProjectionInfo.cs" />
     <Compile Include="ViewModel\ApplicationCommands.cs" />
+    <Compile Include="ViewModel\ApplicationTabsViewModel.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
     <Compile Include="ViewModel\RecentFileViewModel.cs" />
     <Page Include="MainWindow.xaml">

@@ -30,11 +30,17 @@ namespace Open3DViewer.Gui.ViewModel
         public ICommand CommandEditCopy { get; }
         public ICommand CommandEditPaste{ get; }
 
+        public ICommand CommandToolsEnvironmentAndLighting { get; }
+        public ICommand CommandToolsStatsAndShading { get; }
+        public ICommand CommandToolsGridAndViews { get; }
+
         public ICommand CommandViewZoomIn { get; }
         public ICommand CommandViewZoomOut { get; }
         public ICommand CommandViewResetCamera { get; }
 
-        public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
+        public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine, 
+            RenderViewControl.RenderViewControl renderViewControl,
+            ApplicationTabsViewModel tabsViewModel)
         {
             m_renderEngine = renderEngine;
             m_renderViewControl = renderViewControl;
@@ -49,6 +55,10 @@ namespace Open3DViewer.Gui.ViewModel
 
             CommandEditCopy = new RelayCommand(HandleEditCopy);
             CommandEditPaste = new AsyncRelayCommand(HandleEditPaste);
+
+            CommandToolsEnvironmentAndLighting = new RelayCommand(() => tabsViewModel.ActiveTab = ApplicationTabs.EnvironmentAndLighting);
+            CommandToolsStatsAndShading = new RelayCommand(() => tabsViewModel.ActiveTab = ApplicationTabs.StatsAndShading);
+            CommandToolsGridAndViews = new RelayCommand(() => tabsViewModel.ActiveTab = ApplicationTabs.GridAndViews);
 
             CommandViewZoomIn = new RelayCommand(HandleViewZoomIn);
             CommandViewZoomOut = new RelayCommand(HandleViewZoomOut);

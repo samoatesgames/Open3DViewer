@@ -14,6 +14,8 @@
     <ui:UiWindow.Resources>
         <ResourceDictionary>
             <converter:DoesCollectionContainItemsConverter x:Key="Converter.DoesCollectionContainItems" />
+            <converter:ActiveApplicationTabToBoolConverter x:Key="Converter.ActiveTabToBool" />
+            <converter:ActiveApplicationTabToVisibilityConverter x:Key="Converter.ActiveTabToVisibility" />
 
             <Style x:Key="Style.Path.Icon" TargetType="{x:Type Path}">
                 <Setter Property="Fill" Value="{StaticResource TextFillColorPrimaryBrush}" />
@@ -62,6 +64,10 @@
 
         <KeyBinding Command="{Binding Commands.CommandEditCopy}" Modifiers="Control" Key="C" />
         <KeyBinding Command="{Binding Commands.CommandEditPaste}" Modifiers="Control" Key="V" />
+        
+        <KeyBinding Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" Key="L" />
+        <KeyBinding Command="{Binding Commands.CommandToolsStatsAndShading}" Key="S" />
+        <KeyBinding Command="{Binding Commands.CommandToolsGridAndViews}" Key="V" />
     </ui:UiWindow.InputBindings>
 
     <Grid>
@@ -120,9 +126,15 @@
 
                 <!-- Tools Menu -->
                 <ui:MenuItem Header="Tools">
-                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" IsChecked="True" IsEnabled="False" Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" />
-                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandToolsStatsAndShading}" />
-                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandToolsGridAndViews}" />
+                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" 
+                                 IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=EnvironmentAndLighting, Mode=OneWay}" 
+                                 Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" />
+                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" 
+                                 IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=StatsAndShading, Mode=OneWay}" 
+                                 Command="{Binding Commands.CommandToolsStatsAndShading}" />
+                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" 
+                                 IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=GridAndViews, Mode=OneWay}" 
+                                 Command="{Binding Commands.CommandToolsGridAndViews}" />
                 </ui:MenuItem>
 
                 <!-- View Menu -->
@@ -167,10 +179,79 @@
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
             
+            <!-- Render View -->
             <Grid Grid.Column="0">
                 <renderViewControl:RenderViewControl x:Name="RenderView" />
             </Grid>
-            <Grid Grid.Column="1" />
+
+            <!-- Control Tabs -->
+            <Grid Grid.Column="1">
+                <Grid Margin="4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <ToggleButton Margin="2,0"
+                                      IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=EnvironmentAndLighting, Mode=OneWay}" 
+                                      Command="{Binding Commands.CommandToolsEnvironmentAndLighting}"
+                                      Content="☀️" />
+                        <ToggleButton Margin="2,0"
+                                      IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=StatsAndShading, Mode=OneWay}" 
+                                      Command="{Binding Commands.CommandToolsStatsAndShading}"
+                                      Content="📊" />
+                        <ToggleButton Margin="2,0"
+                                      IsChecked="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToBool}, ConverterParameter=GridAndViews, Mode=OneWay}" 
+                                      Command="{Binding Commands.CommandToolsGridAndViews}"
+                                      Content="🎥" />
+                    </StackPanel>
+
+                    <!-- Environment & Lighting -->
+                    <Grid Grid.Row="1" Visibility="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToVisibility}, ConverterParameter=EnvironmentAndLighting, Mode=OneWay}">
+                        <StackPanel>
+                            <Border Margin="0,2,0,0"
+                                    BorderThickness="0,0,0,2"
+                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                <TextBlock Margin="2"
+                                           FontWeight="Normal" FontSize="26" 
+                                           Text="Environment &amp; Lighting" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Stats & Shading -->
+                    <Grid Grid.Row="1" Visibility="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToVisibility}, ConverterParameter=StatsAndShading, Mode=OneWay}">
+                        <StackPanel>
+                            <Border Margin="0,2,0,0"
+                                    BorderThickness="0,0,0,2"
+                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                <TextBlock Margin="2"
+                                           FontWeight="Normal" FontSize="26" 
+                                           Text="Stats &amp; Shading" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Grid & Views -->
+                    <Grid Grid.Row="1" Visibility="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToVisibility}, ConverterParameter=GridAndViews, Mode=OneWay}">
+                        <StackPanel>
+                            <Border Margin="0,2,0,0"
+                                BorderThickness="0,0,0,2"
+                                BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                <TextBlock Margin="2"
+                                           FontWeight="Normal" FontSize="26" 
+                                           Text="Grid &amp; Views" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Row -->
+        <Grid Grid.Row="2">
+            
         </Grid>
     </Grid>
 </ui:UiWindow>

@@ -5,12 +5,14 @@ namespace Open3DViewer.Gui.ViewModel
 {
     internal class ApplicationViewModel
     {
+        public ApplicationTabsViewModel Tabs { get; }
         public ApplicationCommands Commands { get; }
 
         public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             renderEngine.OnInitialized += RenderEngineOnOnInitialized;
-            Commands = new ApplicationCommands(renderEngine, renderViewControl);
+            Tabs = new ApplicationTabsViewModel();
+            Commands = new ApplicationCommands(renderEngine, renderViewControl, Tabs);
         }
 
         private void RenderEngineOnOnInitialized(PBRRenderEngine.PBRRenderEngine engine)
