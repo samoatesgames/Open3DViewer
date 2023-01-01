@@ -4,11 +4,14 @@ layout(set = 2, binding = 0) uniform MaterialInfo
 {
     vec4 DiffuseTint;
 
-    vec3 DirectionalLightDirection;
+    vec3 AmbientLightColor;
     float padding0;
 
-    vec3 DirectionalLightColor;
+    vec3 DirectionalLightDirection;
     float padding1;
+
+    vec3 DirectionalLightColor;
+    float padding2;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
@@ -35,9 +38,6 @@ void main()
     // Calculate our basic lambert lighting
     vec3 lighting = DirectionalLightColor * lambert(fsin_normal, DirectionalLightDirection.xyz);
 
-    // TODO: Provide ambiant amount from buffer
-    vec3 ambiantLight = vec3(0.8, 0.75, 0.7);
-
     // Diffuse color
     vec4 diffuseTexture = texture(sampler2D(DiffuseTexture, DiffuseSampler), fsin_texCoords);
     vec4 diffuse = diffuseTexture * DiffuseTint;
@@ -49,7 +49,7 @@ void main()
     vec3 bumpedDiffuse = normalDiffuse * diffuse.rgb;
     
     // Final result
-    vec3 final = (clamp(ambiantLight + lighting, 0, 10) * bumpedDiffuse);
+    vec3 final = (clamp(AmbientLightColor + lighting, 0, 10) * bumpedDiffuse);
     vec3 result = final;
     
     // [Debug] Draw Diffuse Map Only
