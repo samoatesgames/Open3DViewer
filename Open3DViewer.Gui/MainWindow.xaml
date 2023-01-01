@@ -111,23 +111,23 @@
 
                 <!-- Edit Menu -->
                 <ui:MenuItem Header="Edit">
-                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" Command="{Binding Commands.CommandEditCopy}" />
-                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" Command="{Binding Commands.CommandEditPaste}" />
+                    <ui:MenuItem Header="Copy" InputGestureText="Ctrl+C" Icon="{StaticResource Icon.Edit.Copy}" IsEnabled="False" Command="{Binding Commands.CommandEditCopy}" />
+                    <ui:MenuItem Header="Paste" InputGestureText="Ctrl+V" Icon="{StaticResource Icon.Edit.Paste}" IsEnabled="False" Command="{Binding Commands.CommandEditPaste}" />
                 </ui:MenuItem>
 
                 <!-- Tools Menu -->
                 <ui:MenuItem Header="Tools">
-                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" IsChecked="True" Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" />
-                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" Command="{Binding Commands.CommandToolsStatsAndShading}" />
-                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" Command="{Binding Commands.CommandToolsGridAndViews}" />
+                    <ui:MenuItem Header="Environment &amp; Lighting" InputGestureText="L" IsCheckable="True" IsChecked="True" IsEnabled="False" Command="{Binding Commands.CommandToolsEnvironmentAndLighting}" />
+                    <ui:MenuItem Header="Stats &amp; Shading" InputGestureText="S" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandToolsStatsAndShading}" />
+                    <ui:MenuItem Header="Grid &amp; Views" InputGestureText="V" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandToolsGridAndViews}" />
                 </ui:MenuItem>
 
                 <!-- View Menu -->
                 <ui:MenuItem Header="View">
-                    <ui:MenuItem Header="Hide All Panels" InputGestureText="F9" Command="{Binding Commands.CommandViewHideAllPanels}" />
-                    <ui:MenuItem Header="Property Panel" IsCheckable="True" Command="{Binding Commands.CommandViewPropertyPanel}" />
-                    <ui:MenuItem Header="Animation Panel" IsCheckable="True" Command="{Binding Commands.CommandViewAnimationPanel}" />
-                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" Command="{Binding Commands.CommandViewGrid}" />
+                    <ui:MenuItem Header="Hide All Panels" InputGestureText="F9" IsEnabled="False" Command="{Binding Commands.CommandViewHideAllPanels}" />
+                    <ui:MenuItem Header="Property Panel" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewPropertyPanel}" />
+                    <ui:MenuItem Header="Animation Panel" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewAnimationPanel}" />
+                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewGrid}" />
                     <Separator />
                     <ui:MenuItem Header="Zoom In" InputGestureText="+" Command="{Binding Commands.CommandViewZoomIn}" />
                     <ui:MenuItem Header="Zoom Out" InputGestureText="-" Command="{Binding Commands.CommandViewZoomOut}" />
@@ -141,9 +141,9 @@
 
                 <!-- Help Menu -->
                 <ui:MenuItem Header="Help">
-                    <ui:MenuItem Header="Controls" InputGestureText="F1" Icon="{StaticResource Icon.Help.Controls}" Command="{Binding Commands.CommandHelpControls}" />
-                    <ui:MenuItem Header="Settings" Icon="{StaticResource Icon.Help.Settings}" Command="{Binding Commands.CommandHelpSettings}" />
-                    <ui:MenuItem Header="Feedback" Icon="{StaticResource Icon.Help.Feedback}" Command="{Binding Commands.CommandHelpFeedback}" />
+                    <ui:MenuItem Header="Controls" InputGestureText="F1" Icon="{StaticResource Icon.Help.Controls}" IsEnabled="False" Command="{Binding Commands.CommandHelpControls}" />
+                    <ui:MenuItem Header="Settings" Icon="{StaticResource Icon.Help.Settings}" IsEnabled="False" Command="{Binding Commands.CommandHelpSettings}" />
+                    <ui:MenuItem Header="Feedback" Icon="{StaticResource Icon.Help.Feedback}" IsEnabled="False" Command="{Binding Commands.CommandHelpFeedback}" />
                 </ui:MenuItem>
             </Menu>
 
