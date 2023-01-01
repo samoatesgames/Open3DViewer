@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -75,7 +76,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         public Veldrid.TextureView LoadTexture(Stream stream)
         {
-            var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, false);
+            var imageSharpTexture = new Veldrid.ImageSharp.ImageSharpTexture(stream, !Debugger.IsAttached);
             var deviceTexture = imageSharpTexture.CreateDeviceTexture(m_renderEngine.GraphicsDevice, m_renderEngine.ResourceFactory);
             return CreateTextureView(deviceTexture);
         }
