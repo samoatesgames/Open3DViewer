@@ -1,6 +1,7 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.GLTF;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using Veldrid;
@@ -16,11 +17,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             Pan
         }
 
-        private readonly DeviceBuffer m_projectionBuffer;
-        private readonly DeviceBuffer m_viewBuffer;
+        private ViewProjectionInfo m_viewProjectionInfo;
+        private readonly DeviceBuffer m_viewProjectionBuffer;
 
         private float m_aspectRatio;
-        private Matrix4x4 m_projectionMatrix;
         private GLTFEntity m_lookAtEntity;
         private float m_entitySize;
 
@@ -30,18 +30,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
         private float m_pitchRotation;
         private float m_zoomAmount;
         private float m_zoomDelta;
-        private Vector3 m_lookAtOffset = Vector3.Zero;
 
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
         {
-            m_projectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-            m_projectionBuffer.Name = "CameraProjection_Buffer";
+            m_viewProjectionBuffer = factory.CreateBuffer(new BufferDescription((uint)Marshal.SizeOf<ViewProjectionInfo>(), BufferUsage.UniformBuffer));
+            m_viewProjectionBuffer.Name = "CameraViewProjection_Buffer";
 
-            m_viewBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
-            m_viewBuffer.Name = "CameraView_Buffer";
-
-            engine.RegisterSharedResource(CoreSharedResource.ProjectionBuffer, m_projectionBuffer);
-            engine.RegisterSharedResource(CoreSharedResource.ViewBuffer, m_viewBuffer);
+            engine.RegisterSharedResource(CoreSharedResource.ViewProjectionBuffer, m_viewProjectionBuffer);
 
             var frameBuffer = engine.Swapchain.Framebuffer;
             OnSwapchainResized(frameBuffer.Width, frameBuffer.Height);
@@ -50,7 +45,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
         public void OnSwapchainResized(uint width, uint height)
         {
             m_aspectRatio = (float)width / height;
-            m_projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(
+            m_viewProjectionInfo.Projection = Matrix4x4.CreatePerspectiveFieldOfView(
                 1.0f,
                 m_aspectRatio,
                 0.005f,
@@ -142,23 +137,20 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
         public void GenerateCommands(CommandList commandList)
         {
-            commandList.UpdateBuffer(m_projectionBuffer, 0, m_projectionMatrix);
-
             if (m_lookAtEntity != null)
             {
                 var lookAtBounds = m_lookAtEntity.GetBoundingBox();
                 var zOffset = Vector3.UnitZ * m_zoomAmount;
-                var cameraLookAt = lookAtBounds.Center + m_lookAtOffset;
+                var cameraLookAt = lookAtBounds.Center;
                 var cameraPosition = Vector3.Transform(cameraLookAt + zOffset, Matrix4x4.CreateFromYawPitchRoll(m_yawRotation, m_pitchRotation, 0.0f));
-
-                var lookAtMatrix = Matrix4x4.CreateLookAt(cameraPosition, cameraLookAt, Vector3.UnitY);
-                commandList.UpdateBuffer(m_viewBuffer, 0, lookAtMatrix);
+                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(cameraPosition, cameraLookAt, Vector3.UnitY);
             }
             else
             {
-                var lookAtMatrix = Matrix4x4.CreateLookAt(Vector3.UnitZ * -5f, Vector3.Zero, Vector3.UnitY);
-                commandList.UpdateBuffer(m_viewBuffer, 0, lookAtMatrix);
+                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Vector3.UnitZ * -5f, Vector3.Zero, Vector3.UnitY);
             }
+
+            commandList.UpdateBuffer(m_viewProjectionBuffer, 0, ref m_viewProjectionInfo);
         }
 
         public void LookAt(GLTFEntity entity)

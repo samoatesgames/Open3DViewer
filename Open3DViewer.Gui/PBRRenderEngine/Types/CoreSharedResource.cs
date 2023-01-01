@@ -2,7 +2,6 @@
 {
     public enum CoreSharedResource
     {
-        ProjectionBuffer,
-        ViewBuffer
+        ViewProjectionBuffer
     }
 }

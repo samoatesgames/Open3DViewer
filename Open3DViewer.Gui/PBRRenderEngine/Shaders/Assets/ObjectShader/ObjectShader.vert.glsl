@@ -1,12 +1,10 @@
 ﻿#version 450
-layout(set = 0, binding = 0) uniform ProjectionBuffer
-{
-    mat4 Projection;
-};
-layout(set = 0, binding = 1) uniform ViewBuffer
+layout(set = 0, binding = 0) uniform ViewProjectionBuffer
 {
     mat4 View;
+    mat4 Projection;
 };
+
 layout(set = 1, binding = 0) uniform WorldBuffer
 {
     mat4 World;

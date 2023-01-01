@@ -268,6 +268,7 @@
     <Compile Include="PBRRenderEngine\Types\ShaderResourceManager.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureResourceManager.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureSamplerIndex.cs" />
+    <Compile Include="PBRRenderEngine\Types\ViewProjectionInfo.cs" />
     <Compile Include="ViewModel\ApplicationCommands.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
     <Compile Include="ViewModel\RecentFileViewModel.cs" />

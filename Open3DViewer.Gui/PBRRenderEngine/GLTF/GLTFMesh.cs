@@ -241,22 +241,17 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             projViewLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
-                    new ResourceLayoutElementDescription("ProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
+                    new ResourceLayoutElementDescription("ViewProjectionBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
                     {
-                        Name = "ProjectionBuffer_LayoutDescription"
-                    },
-                    new ResourceLayoutElementDescription("ViewBuffer", ResourceKind.UniformBuffer, ShaderStages.Vertex)
-                    {
-                        Name = "ViewBuffer_LayoutDescription"
+                        Name = "ViewProjectionBuffer_LayoutDescription"
                     }
                 )
             );
 
             projViewSet = factory.CreateResourceSet(new ResourceSetDescription(
                 projViewLayout,
-                engine.GetSharedResource(CoreSharedResource.ProjectionBuffer),
-                engine.GetSharedResource(CoreSharedResource.ViewBuffer)));
-            projViewSet.Name = "ProjView_ResourceSet";
+                engine.GetSharedResource(CoreSharedResource.ViewProjectionBuffer)));
+            projViewSet.Name = "ViewProj_ResourceSet";
         }
 
         private void RegisterGraphicsResource(uint slot, ResourceSet resourceSet)

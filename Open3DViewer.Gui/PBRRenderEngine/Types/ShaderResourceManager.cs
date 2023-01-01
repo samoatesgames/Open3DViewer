@@ -79,9 +79,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 m_shaderCache[shader.GetType()] = compiledShaders;
                 m_vertexLayoutCache[shader.GetType()] = vertexLayouts;
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO: Log out a shader compile issue
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
             }
 
         }

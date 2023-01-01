@@ -1,6 +1,6 @@
 ﻿#version 450
 
-layout(set = 2, binding = 2) uniform MaterialInfo
+layout(set = 2, binding = 0) uniform MaterialInfo
 {
     vec4 DiffuseTint;
 
