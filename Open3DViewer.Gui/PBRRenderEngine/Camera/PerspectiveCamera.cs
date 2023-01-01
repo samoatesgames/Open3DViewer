@@ -31,6 +31,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
         private float m_zoomAmount;
         private float m_zoomDelta;
 
+        public Vector3 Position { get; private set; }
+
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
         {
             m_viewProjectionBuffer = factory.CreateBuffer(new BufferDescription((uint)Marshal.SizeOf<ViewProjectionInfo>(), BufferUsage.UniformBuffer));
@@ -142,12 +144,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
                 var lookAtBounds = m_lookAtEntity.GetBoundingBox();
                 var zOffset = Vector3.UnitZ * m_zoomAmount;
                 var cameraLookAt = lookAtBounds.Center;
-                var cameraPosition = Vector3.Transform(cameraLookAt + zOffset, Matrix4x4.CreateFromYawPitchRoll(m_yawRotation, m_pitchRotation, 0.0f));
-                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(cameraPosition, cameraLookAt, Vector3.UnitY);
+                Position = Vector3.Transform(cameraLookAt + zOffset, Matrix4x4.CreateFromYawPitchRoll(m_yawRotation, m_pitchRotation, 0.0f));
+                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Position, cameraLookAt, Vector3.UnitY);
             }
             else
             {
-                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Vector3.UnitZ * -5f, Vector3.Zero, Vector3.UnitY);
+                Position = Vector3.UnitZ * -5f;
+                m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Position, Vector3.Zero, Vector3.UnitY);
             }
 
             commandList.UpdateBuffer(m_viewProjectionBuffer, 0, ref m_viewProjectionInfo);
@@ -161,6 +164,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
         private void ResetCamera()
         {
+            Position = Vector3.UnitZ * -5f;
             m_yawRotation = -0.5f;
             m_pitchRotation = -6.0f;
             m_zoomDelta = 0.0f;

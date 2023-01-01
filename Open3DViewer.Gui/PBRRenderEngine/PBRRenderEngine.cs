@@ -4,6 +4,7 @@ using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Open3DViewer.RenderViewControl;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Veldrid;
@@ -25,6 +26,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         public TextureResourceManager TextureResourceManager { get; private set; }
         public ShaderResourceManager ShaderResourceManager { get; private set; }
+        public Vector3 CameraPosition => m_camera.Position;
 
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }

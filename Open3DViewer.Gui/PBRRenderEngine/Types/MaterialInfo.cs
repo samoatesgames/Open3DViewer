@@ -17,6 +17,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         public Vector3 DirectionalLightColor;
         public float Padding2;
 
+        public Vector3 CameraPosition;
+        public float Padding3;
+
         public static MaterialInfo Create()
         {
             return new MaterialInfo
@@ -27,7 +30,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 DirectionalLightDirection = Vector3.Normalize(new Vector3(-2, 1, -4)),
                 Padding1 = 0.0f,
                 DirectionalLightColor = Vector3.One,
-                Padding2 = 0.0f
+                Padding2 = 0.0f,
+                CameraPosition = Vector3.UnitZ,
+                Padding3 = 0.0f
             };
         }
     }
