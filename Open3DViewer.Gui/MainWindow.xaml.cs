@@ -10,6 +10,7 @@ namespace Open3DViewer.Gui
         public MainWindow()
         {
             InitializeComponent();
+            Wpf.Ui.Appearance.Accent.ApplySystemAccent();
 
             var renderEngine = new PBRRenderEngine.PBRRenderEngine();
             RenderView.RenderEngine = renderEngine;

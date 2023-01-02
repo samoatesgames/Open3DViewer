@@ -8,8 +8,11 @@
              xmlns:viewModel="clr-namespace:Open3DViewer.Gui.ViewModel"
              xmlns:converter="clr-namespace:Open3DViewer.Gui.Converter"
              mc:Ignorable="d"
+             Background="{DynamicResource ApplicationBackgroundBrush}"
+             ExtendsContentIntoTitleBar="True"
+             WindowBackdropType="None"
+             WindowCornerPreference="Default"
              d:DataContext="{d:DesignInstance viewModel:ApplicationViewModel}"
-             Title="Open 3D Viewer"
              WindowStartupLocation="CenterScreen" Width="1280" Height="720">
     <ui:UiWindow.Resources>
         <ResourceDictionary>
@@ -73,13 +76,17 @@
     <Grid>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="46" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="46" />
         </Grid.RowDefinitions>
 
+        <!-- Title Bar -->
+        <ui:TitleBar Grid.Row="0" Title="OPEN 3D VIEWER" />
+
         <!-- Top Menu Row -->
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -173,7 +180,7 @@
         </Grid>
 
         <!-- Middle Row -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="300" />
@@ -230,6 +237,24 @@
                                            FontWeight="Normal" FontSize="26" 
                                            Text="Stats &amp; Shading" />
                             </Border>
+
+                            <Border Margin="0,2,0,0"
+                                    BorderThickness="0,0,0,2"
+                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                <TextBlock Margin="2"
+                                           FontWeight="Normal" FontSize="18" 
+                                           Text="Shading Mode" />
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Tabs.SupportedRenderModes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton GroupName="ShadingModeGroup" 
+                                                     Content="{Binding DisplayName}" 
+                                                     IsChecked="{Binding IsActive}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Grid>
 
@@ -250,7 +275,7 @@
         </Grid>
 
         <!-- Bottom Row -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="3">
             
         </Grid>
     </Grid>

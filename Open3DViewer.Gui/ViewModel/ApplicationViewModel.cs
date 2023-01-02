@@ -11,7 +11,7 @@ namespace Open3DViewer.Gui.ViewModel
         public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             renderEngine.OnInitialized += RenderEngineOnOnInitialized;
-            Tabs = new ApplicationTabsViewModel();
+            Tabs = new ApplicationTabsViewModel(renderEngine);
             Commands = new ApplicationCommands(renderEngine, renderViewControl, Tabs);
         }
 
