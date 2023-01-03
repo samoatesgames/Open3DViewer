@@ -251,6 +251,22 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             }
         }
 
+        public void SetAmbientLightColor(Vector3 color)
+        {
+            foreach (var mesh in m_meshes)
+            {
+                mesh.SetAmbientLightColor(color);
+            }
+        }
+
+        public void SetDirectionalLightColor(Vector3 color)
+        {
+            foreach (var mesh in m_meshes)
+            {
+                mesh.SetDirectionalLightColor(color);
+            }
+        }
+
         public void Render(CommandList commandList, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)

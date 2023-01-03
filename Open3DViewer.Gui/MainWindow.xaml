@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
              xmlns:renderViewControl="clr-namespace:Open3DViewer.RenderViewControl;assembly=Open3DViewer.RenderViewControl"
              xmlns:viewModel="clr-namespace:Open3DViewer.Gui.ViewModel"
              xmlns:converter="clr-namespace:Open3DViewer.Gui.Converter"
@@ -216,15 +217,39 @@
 
                     <!-- Environment & Lighting -->
                     <Grid Grid.Row="1" Visibility="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToVisibility}, ConverterParameter=EnvironmentAndLighting, Mode=OneWay}">
-                        <StackPanel>
-                            <Border Margin="0,2,0,0"
-                                    BorderThickness="0,0,0,2"
-                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
-                                <TextBlock Margin="2"
-                                           FontWeight="Normal" FontSize="26" 
-                                           Text="Environment &amp; Lighting" />
-                            </Border>
-                        </StackPanel>
+                        <ScrollViewer>
+                            <StackPanel>
+                                <Border Margin="0,2,0,0"
+                                        BorderThickness="0,0,0,2"
+                                        BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                    <TextBlock Margin="2"
+                                               FontWeight="Normal" FontSize="26" 
+                                               Text="Environment &amp; Lighting" />
+                                </Border>
+
+                                <Border Margin="0,2,0,2"
+                                        BorderThickness="0,0,0,2"
+                                        BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                    <TextBlock Margin="2"
+                                               FontWeight="Normal" FontSize="18" 
+                                               Text="Lighting" />
+                                </Border>
+
+                                <ui:CardExpander Header="Ambient Light" Margin="0,2">
+                                    <colorpicker:ColorSliders Style="{StaticResource DefaultColorPickerStyle}" 
+                                                              SelectedColor="{Binding Tabs.AmbientLightColor, Mode=TwoWay}"
+                                                              ShowAlpha="False"
+                                                              />
+                                </ui:CardExpander>
+
+                                <ui:CardExpander Header="Directional Light" Margin="0,2">
+                                    <colorpicker:ColorSliders Style="{StaticResource DefaultColorPickerStyle}" 
+                                                              SelectedColor="{Binding Tabs.DirectionalLightColor, Mode=TwoWay}"
+                                                              ShowAlpha="False"
+                                                              />
+                                </ui:CardExpander>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
                     <!-- Stats & Shading -->

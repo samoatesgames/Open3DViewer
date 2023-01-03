@@ -76,6 +76,16 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.ShadingMode = shadingMode;
         }
 
+        public void SetAmbientLightColor(Vector3 color)
+        {
+            m_materialInfo.AmbientLightColor = color;
+        }
+
+        public void SetDirectionalLightColor(Vector3 color)
+        {
+            m_materialInfo.DirectionalLightColor = color;
+        }
+
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();
