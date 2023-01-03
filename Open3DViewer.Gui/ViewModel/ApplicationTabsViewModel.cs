@@ -13,45 +13,12 @@ namespace Open3DViewer.Gui.ViewModel
         StatsAndShading,
         GridAndViews
     }
-
-    public class ShadingModeViewModel : ObservableObject
-    {
-        private readonly ApplicationTabsViewModel m_applicationTabsViewModel;
-
-        public ShadingModes ShadingMode { get; }
-        public string DisplayName { get; }
-
-        public bool IsActive
-        {
-            get => m_applicationTabsViewModel.ActiveShadingMode == ShadingMode;
-            set
-            {
-                if (value)
-                {
-                    m_applicationTabsViewModel.ActiveShadingMode = ShadingMode;
-                }
-                OnPropertyChanged();
-            }
-        }
-
-        // TODO: We shouldn't need ApplicationTabsViewModel because the 'active shading mode' should be in a scene description object
-        public ShadingModeViewModel(ApplicationTabsViewModel tabsViewModel, ShadingModes shadingMode)
-        {
-            m_applicationTabsViewModel = tabsViewModel;
-            
-            ShadingMode = shadingMode;
-            DisplayName = shadingMode.ToString(); // TODO: Add a display name attribute to the enum
-        }
-    }
-
+    
     public class ApplicationTabsViewModel : ObservableObject
     {
-        private PBRRenderEngine.PBRRenderEngine m_engine;
+        private readonly PBRRenderEngine.PBRRenderEngine m_engine;
 
         private ApplicationTabs m_activeTab = ApplicationTabs.EnvironmentAndLighting;
-        private ShadingModes m_activeShadingMode = ShadingModes.Default; // TODO: This should be stored on a screen description in the render engine
-        private Color m_ambientLightColor = Color.FromScRgb(1.0f, 0.8f, 0.7f, 0.7f);
-        private Color m_directionalLightColor = Color.FromScRgb(1.0f, 1.0f, 1.0f, 1.0f);
 
         public ApplicationTabs ActiveTab
         {
@@ -68,45 +35,49 @@ namespace Open3DViewer.Gui.ViewModel
 
         public ShadingModes ActiveShadingMode
         {
-            get => m_activeShadingMode;
+            get => m_engine.SceneInfo.ShadingMode;
             set
             {
-                if (m_activeShadingMode != value)
+                if (m_engine.SceneInfo.ShadingMode != value)
                 {
-                    m_activeShadingMode = value;
+                    m_engine.SetShadingMode(value);
                     OnPropertyChanged();
-
-                    m_engine.ActiveScene.SetShadingMode(value);
                 }
             }
         }
 
         public Color AmbientLightColor
         {
-            get => m_ambientLightColor;
+            get
+            {
+                var color = m_engine.SceneInfo.AmbientLightColor;
+                return Color.FromScRgb(1.0f, color.X, color.Y, color.Z);
+            }
             set
             {
-                if (m_ambientLightColor != value)
+                var color = new Vector3(value.ScR, value.ScG, value.ScB);
+                if (m_engine.SceneInfo.AmbientLightColor != color)
                 {
-                    m_ambientLightColor = value;
+                    m_engine.SetAmbientLightColor(color);
                     OnPropertyChanged();
-
-                    m_engine.ActiveScene.SetAmbientLightColor(new Vector3(value.ScR, value.ScG, value.ScB));
                 }
             }
         }
 
         public Color DirectionalLightColor
         {
-            get => m_directionalLightColor;
+            get
+            {
+                var color = m_engine.SceneInfo.DirectionalLightColor;
+                return Color.FromScRgb(1.0f, color.X, color.Y, color.Z);
+            }
             set
             {
-                if (m_directionalLightColor != value)
+                var color = new Vector3(value.ScR, value.ScG, value.ScB);
+                if (m_engine.SceneInfo.DirectionalLightColor != color)
                 {
-                    m_directionalLightColor = value;
+                    m_engine.SetDirectionalLightColor(color);
                     OnPropertyChanged();
-
-                    m_engine.ActiveScene.SetDirectionalLightColor(new Vector3(value.ScR, value.ScG, value.ScB));
                 }
             }
         }
@@ -119,7 +90,7 @@ namespace Open3DViewer.Gui.ViewModel
 
             foreach (ShadingModes shadingMode in Enum.GetValues(typeof(ShadingModes)))
             {
-                SupportedRenderModes.Add(new ShadingModeViewModel(this, shadingMode));
+                SupportedRenderModes.Add(new ShadingModeViewModel(engine, shadingMode));
             }
         }
     }

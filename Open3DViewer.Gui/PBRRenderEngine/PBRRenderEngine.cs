@@ -4,6 +4,8 @@ using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Open3DViewer.RenderViewControl;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Veldrid;
@@ -14,6 +16,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
     {
         private readonly Dictionary<CoreSharedResource, BindableResource> m_coreSharedResources =
             new Dictionary<CoreSharedResource, BindableResource>();
+
+        private SceneInfo m_sceneInfo = SceneInfo.Create();
+        private DeviceBuffer m_sceneInfoBuffer;
 
         private PerspectiveCamera m_camera;
 
@@ -26,6 +31,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public TextureResourceManager TextureResourceManager { get; private set; }
         public ShaderResourceManager ShaderResourceManager { get; private set; }
         public PerspectiveCamera Camera => m_camera;
+        public SceneInfo SceneInfo => m_sceneInfo;
+        public DeviceBuffer SceneInfoBuffer => m_sceneInfoBuffer;
 
         public GraphicsDevice GraphicsDevice { get; private set; }
         public ResourceFactory ResourceFactory { get; private set; }
@@ -47,6 +54,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             ShaderResourceManager = new ShaderResourceManager(this);
 
             m_camera = new PerspectiveCamera(this, factory);
+            
+            var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<SceneInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
+            m_sceneInfoBuffer = ResourceFactory.CreateBuffer(bufferDescription);
+            m_sceneInfoBuffer.Name = "SceneInfo_Buffer";
 
             OnInitialized?.Invoke(this);
         }
@@ -69,6 +80,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             }
 
             m_camera.GenerateCommands(commandList);
+
+            m_sceneInfo.CameraPosition = m_camera.Position;
+            commandList.UpdateBuffer(m_sceneInfoBuffer, 0, ref m_sceneInfo);
+
             m_entity?.Render(commandList);
         }
         
@@ -110,6 +125,21 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public void RegisterSharedResource(CoreSharedResource resourceType, BindableResource resource)
         {
             m_coreSharedResources[resourceType] = resource;
+        }
+
+        public void SetShadingMode(ShadingModes shadingMode)
+        {
+            m_sceneInfo.ShadingMode = shadingMode;
+        }
+
+        public void SetAmbientLightColor(Vector3 color)
+        {
+            m_sceneInfo.AmbientLightColor = color;
+        }
+
+        public void SetDirectionalLightColor(Vector3 color)
+        {
+            m_sceneInfo.DirectionalLightColor = color;
         }
 
         public async Task<bool> TryLoadAssetAsync(string assetPath)

@@ -1,9 +1,7 @@
 ﻿#version 450
 
-layout(set = 2, binding = 0) uniform MaterialInfo
+layout(set = 2, binding = 0) uniform SceneInfo
 {
-    vec4 DiffuseTint;
-
     vec3 AmbientLightColor;
     float padding0;
 
@@ -20,6 +18,11 @@ layout(set = 2, binding = 0) uniform MaterialInfo
     uint padding4;
     uint padding5;
     uint padding6;
+};
+
+layout(set = 2, binding = 1) uniform MaterialInfo
+{
+    vec4 DiffuseTint;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;

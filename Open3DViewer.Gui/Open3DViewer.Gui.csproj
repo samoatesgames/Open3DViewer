@@ -273,6 +273,7 @@
     <Compile Include="Converter\ActiveApplicationTabToVisibilityConverter.cs" />
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
     <Compile Include="PBRRenderEngine\Types\MaterialInfo.cs" />
+    <Compile Include="PBRRenderEngine\Types\SceneInfo.cs" />
     <Compile Include="PBRRenderEngine\Types\ShaderResourceManager.cs" />
     <Compile Include="PBRRenderEngine\Types\ShadingModes.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureResourceManager.cs" />
@@ -282,6 +283,7 @@
     <Compile Include="ViewModel\ApplicationTabsViewModel.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
     <Compile Include="ViewModel\RecentFileViewModel.cs" />
+    <Compile Include="ViewModel\ShadingModeViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

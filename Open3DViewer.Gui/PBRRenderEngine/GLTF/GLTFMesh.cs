@@ -71,21 +71,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.Tint = tintColor;
         }
 
-        public void SetShadingMode(ShadingModes shadingMode)
-        {
-            m_materialInfo.ShadingMode = shadingMode;
-        }
-
-        public void SetAmbientLightColor(Vector3 color)
-        {
-            m_materialInfo.AmbientLightColor = color;
-        }
-
-        public void SetDirectionalLightColor(Vector3 color)
-        {
-            m_materialInfo.DirectionalLightColor = color;
-        }
-
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();
@@ -119,8 +104,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         {
             var transform = m_localTransform * worldTransform;
             commandList.UpdateBuffer(m_worldBuffer, 0, ref transform);
-
-            m_materialInfo.CameraPosition = m_engine.Camera.Position;
+            
             commandList.UpdateBuffer(m_materialInfoBuffer, 0, ref m_materialInfo);
 
             commandList.SetVertexBuffer(0, m_vertexBuffer);
@@ -150,11 +134,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             CreateWorldMatrixResources(engine, out var worldLayout, out var worldSet);
             resourceLayouts.Add(worldLayout);
             RegisterGraphicsResource(1, worldSet);
-            
-            // Material info resources
-            CreateMaterialInfoResource(engine, out var materialInfoLayout, out var materialInfoSet);
-            resourceLayouts.Add(materialInfoLayout);
-            RegisterGraphicsResource(2, materialInfoSet);
+
+            // Scene/Material info resources
+            CreateConstantInfoResources(engine, out var constantInfoLayout, out var constantInfoSet);
+            resourceLayouts.Add(constantInfoLayout);
+            RegisterGraphicsResource(2, constantInfoSet);
 
             // Setup texture sampler resources
             foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
@@ -232,12 +216,16 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             worldSet.Name = "World_ResourceSet";
         }
 
-        private void CreateMaterialInfoResource(PBRRenderEngine engine, out ResourceLayout materialInfoLayout, out ResourceSet materialInfoSet)
+        private void CreateConstantInfoResources(PBRRenderEngine engine, out ResourceLayout materialInfoLayout, out ResourceSet materialInfoSet)
         {
             var factory = engine.ResourceFactory;
 
             materialInfoLayout = factory.CreateResourceLayout(
                 new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("SceneInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)
+                    {
+                        Name = "SceneInfoBuffer_LayoutDescription"
+                    },
                     new ResourceLayoutElementDescription("MaterialInfo", ResourceKind.UniformBuffer, ShaderStages.Fragment)
                     {
                         Name = "MaterialInfoBuffer_LayoutDescription"
@@ -247,6 +235,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             materialInfoSet = factory.CreateResourceSet(new ResourceSetDescription(
                 materialInfoLayout,
+                engine.SceneInfoBuffer,
                 m_materialInfoBuffer));
             materialInfoSet.Name = "MaterialInfo_ResourceSet";
         }

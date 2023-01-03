@@ -242,31 +242,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
             return true;
         }
-
-        public void SetShadingMode(ShadingModes shadingMode)
-        {
-            foreach (var mesh in m_meshes)
-            {
-                mesh.SetShadingMode(shadingMode);
-            }
-        }
-
-        public void SetAmbientLightColor(Vector3 color)
-        {
-            foreach (var mesh in m_meshes)
-            {
-                mesh.SetAmbientLightColor(color);
-            }
-        }
-
-        public void SetDirectionalLightColor(Vector3 color)
-        {
-            foreach (var mesh in m_meshes)
-            {
-                mesh.SetDirectionalLightColor(color);
-            }
-        }
-
+        
         public void Render(CommandList commandList, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)
