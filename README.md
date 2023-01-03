@@ -6,7 +6,7 @@ An open source 3D model viewer inspired by Microsofts ['3D viewer'](https://apps
 
 ## Media
 
-![Sponza opened in the tool as of the 3rd of January, 2023](https://raw.githubusercontent.com/samoatesgames/Open3DViewer/main/media/03-01-2023_MainWindow_Sponza.png?token=GHSAT0AAAAAAB426L63CHHVFIUVVHX33GIQY5UGQKQ)
+![Sponza opened in the tool as of the 3rd of January, 2023](https://github.com/samoatesgames/Open3DViewer/raw/54c4efa25874a172b083df1915cf29f2f23e490e/media/03-01-2023_MainWindow_Sponza.png)
 
 ## Features
 
