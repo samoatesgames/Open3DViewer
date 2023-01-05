@@ -113,6 +113,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             IList<Vector3> positionStream = null;
             IList<Vector3> normalStream = null;
+            IList<Vector4> tangentStream = null;
             IList<Vector2> uv0Stream = null;
             
             foreach (var vertexAccessorDesc in primitive.VertexAccessors)
@@ -127,6 +128,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         break;
                     case "NORMAL":
                         normalStream = accessor.AsVector3Array();
+                        break;
+                    case "TANGENT":
+                        tangentStream = accessor.AsVector4Array();
                         break;
                     case "TEXCOORD_0":
                         uv0Stream = accessor.AsVector2Array();
@@ -159,6 +163,35 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     vertex.NormalX = normal.X;
                     vertex.NormalY = normal.Y;
                     vertex.NormalZ = normal.Z;
+
+                    if (tangentStream != null)
+                    {
+                        var tangent = tangentStream[vertexIndex];
+                        vertex.TangentX = tangent.X;
+                        vertex.TangentY = tangent.Y;
+                        vertex.TangentZ = tangent.Z;
+
+                        var biTangent = Vector3.Cross(normal, new Vector3(tangent.X, tangent.Y, tangent.Z)) * tangent.W;
+                        vertex.BiTangentX = biTangent.X;
+                        vertex.BiTangentY = biTangent.Y;
+                        vertex.BiTangentZ = biTangent.Z;
+                    }
+                    else
+                    {
+                        // Calculate our tangent/bitangent
+                        var t1 = Vector3.Cross(normal, Vector3.UnitZ);
+                        var t2 = Vector3.Cross(normal, Vector3.UnitY);
+                        var tangent = t1.LengthSquared() > t2.LengthSquared() ? t1 : t2;
+                        var biTangent = Vector3.Cross(normal, tangent);
+
+                        vertex.TangentX = tangent.X;
+                        vertex.TangentY = tangent.Y;
+                        vertex.TangentZ = tangent.Z;
+
+                        vertex.BiTangentX = biTangent.X;
+                        vertex.BiTangentY = biTangent.Y;
+                        vertex.BiTangentZ = biTangent.Z;
+                    }
                 }
 
                 if (uv0Stream != null)

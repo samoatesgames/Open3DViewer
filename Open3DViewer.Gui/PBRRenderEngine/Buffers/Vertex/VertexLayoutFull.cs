@@ -10,9 +10,17 @@
         public float NormalY;
         public float NormalZ;
 
+        public float TangentX;
+        public float TangentY;
+        public float TangentZ;
+
+        public float BiTangentX;
+        public float BiTangentY;
+        public float BiTangentZ;
+
         public float TexU0;
         public float TexV0;
         
-        public uint GetSizeInBytes() => 32;
+        public uint GetSizeInBytes() => 56;
     }
 }

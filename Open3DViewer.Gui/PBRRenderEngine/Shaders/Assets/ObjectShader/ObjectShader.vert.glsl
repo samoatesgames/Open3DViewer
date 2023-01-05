@@ -12,20 +12,30 @@ layout(set = 1, binding = 0) uniform WorldBuffer
 
 layout(location = 0) in vec3 Position;
 layout(location = 1) in vec3 Normal;
-layout(location = 2) in vec2 TexCoords;
+layout(location = 2) in vec3 Tangent;
+layout(location = 3) in vec3 BiTangent;
+layout(location = 4) in vec2 TexCoords;
 
-layout(location = 0) out vec3 fsin_positionWorldSpace;
-layout(location = 1) out vec3 fsin_normal;
-layout(location = 2) out vec2 fsin_texCoords;
+layout(location=0) out Vertex
+{
+	vec3 position;
+	vec3 normal;
+	vec3 tangent;
+	vec3 bitangent;
+	vec2 texcoord;
+	mat3 tangentBasis;
+} vout;
 
 void main()
 {
     vec4 worldPosition = World * vec4(Position, 1);
-    vec4 viewPosition = View * worldPosition;
-    vec4 clipPosition = Projection * viewPosition;
-    gl_Position = clipPosition;
-    
-    fsin_positionWorldSpace = worldPosition.xyz;
-    fsin_normal = Normal;
-    fsin_texCoords = TexCoords;
+
+    vout.position = worldPosition.xyz;
+    vout.normal = Normal;
+    vout.tangent = Tangent;
+    vout.bitangent = BiTangent;
+	vout.texcoord = TexCoords;
+	vout.tangentBasis = mat3(World) * mat3(Tangent, BiTangent, Normal);
+
+	gl_Position = Projection * (View * worldPosition);
 }

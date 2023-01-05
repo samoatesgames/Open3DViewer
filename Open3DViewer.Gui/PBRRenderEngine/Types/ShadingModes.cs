@@ -14,6 +14,8 @@
 
         // Vertex
         Vertex_Normal = 5,
-        Vertex_TexCoord = 6
+        Vertex_Tangent = 6,
+        Vertex_BiTangent = 7,
+        Vertex_TexCoord = 8,
     }
 }
