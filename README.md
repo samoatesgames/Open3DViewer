@@ -2,7 +2,7 @@
 
 ## About
 
-An open source 3D model viewer inspired by Microsofts ['3D viewer'](https://apps.microsoft.com/store/detail/3d-viewer/9NBLGGH42THS).
+An open source 3D model viewer inspired by Microsofts ['3D Viewer'](https://apps.microsoft.com/store/detail/3d-viewer/9NBLGGH42THS).
 
 ## Media
 
