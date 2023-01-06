@@ -76,6 +76,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.MetallicRoughnessFactors = new Vector2(metallicFactor, roughnessFactor);
         }
 
+        public void SetEmission(Vector3 emissiveTintColor, float emissiveStrength)
+        {
+            m_materialInfo.EmissiveFactors = new Vector4(emissiveTintColor, emissiveStrength);
+        }
+
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();

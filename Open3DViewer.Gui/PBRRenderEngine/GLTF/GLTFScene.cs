@@ -231,8 +231,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
                 var diffuseTintColor = Vector4.One;
+
                 var metallicFactor = 0.0f;
                 var roughnessFactor = 0.0f;
+
+                var emissiveStrength = 1.0f;
+                var emissiveTintColor = Vector3.Zero;
 
                 Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
@@ -273,6 +277,21 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     else if (materialChannel.Key == "Emissive")
                     {
                         samplerIndex = TextureSamplerIndex.Emissive;
+
+                        if (FindParameter<float>(materialChannel.Parameters, "EmissiveStrength", out var strength))
+                        {
+                            emissiveStrength = strength;
+                        }
+
+                        // See if we have a emissive tint color
+                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
+                        {
+                            emissiveTintColor = new Vector3(rgba.X, rgba.Y, rgba.Z);
+                        }
+                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
+                        {
+                            emissiveTintColor = rgb;
+                        }
                     }
                     else if (materialChannel.Key == "Occlusion")
                     {
@@ -293,7 +312,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
                 gltfMesh.SetDiffuseTint(diffuseTintColor);
                 gltfMesh.SetMetallicRoughnessValues(metallicFactor, roughnessFactor);
-
+                gltfMesh.SetEmission(emissiveTintColor, emissiveStrength);
 
                 foreach (var entry in loadedTextures)
                 {

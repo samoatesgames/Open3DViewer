@@ -12,6 +12,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         public uint MaterialInfo_Padding0;
 
+        public Vector4 EmissiveFactors;
+
         public static MaterialInfo Create()
         {
             return new MaterialInfo
@@ -20,6 +22,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 MetallicRoughnessFactors = Vector2.Zero,
                 BoundTextureBitMask = 0,
                 MaterialInfo_Padding0 = 0,
+                EmissiveFactors = new Vector4(0, 0, 0, 1)
             };
         }
     }

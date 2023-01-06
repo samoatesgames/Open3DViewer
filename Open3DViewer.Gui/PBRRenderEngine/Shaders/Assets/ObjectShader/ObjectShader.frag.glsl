@@ -40,6 +40,8 @@ layout(set = 2, binding = 1) uniform MaterialInfo
 	uint BoundTextureBitMask;
 
 	uint MaterialInfo_Padding0;
+
+	vec4 EmissiveFactors;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
@@ -121,11 +123,12 @@ void main()
 	}
 
 	// Emmisive values
-	vec3 emissive = vec3(0);
+	vec3 emissive = EmissiveFactors.xyz;
 	if ((BoundTextureBitMask & IsEmissiveTextureBound) == IsEmissiveTextureBound)
 	{
-		emissive = texture(sampler2D(EmissiveTexture, EmissiveSampler), vin.texcoord).rgb;
+		emissive *= texture(sampler2D(EmissiveTexture, EmissiveSampler), vin.texcoord).rgb;
 	}
+	emissive *= EmissiveFactors.w;
 
     // Outgoing light direction (vector from world-space fragment position to the "eye").
 	vec3 Lo = normalize(CameraPosition - vin.position);
