@@ -71,6 +71,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.Tint = tintColor;
         }
 
+        public void SetMetallicRoughnessValues(float metallicFactor, float roughnessFactor)
+        {
+            m_materialInfo.MetallicRoughnessFactors = new Vector2(metallicFactor, roughnessFactor);
+        }
+
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();
@@ -141,14 +146,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             RegisterGraphicsResource(2, constantInfoSet);
 
             // Setup texture sampler resources
+            var samplerMask = 1;
+            
             foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
             {
-                if (samplerType != TextureSamplerIndex.Diffuse && samplerType != TextureSamplerIndex.Normal)
-                {
-                    // TODO: Support more than the diffuse and normal
-                    continue;
-                }
-
                 var textureLayout = factory.CreateResourceLayout(
                     new ResourceLayoutDescription(
                         new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
@@ -162,7 +163,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 {
                     textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
                 }
-                
+                else
+                {
+                    m_materialInfo.BoundTextureBitMask |= (uint)samplerMask;
+                }
+                samplerMask *= 2;
+
                 var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
                     textureLayout,
                     engine.GraphicsDevice.LinearSampler,

@@ -1,5 +1,18 @@
 ﻿#version 450
 
+// PBR implementation based upon: https://github.com/Nadrin/PBR
+
+const float PI = 3.141592;
+const float Epsilon = 0.00001;
+const int NumLights = 1;
+const vec3 Fdielectric = vec3(0.025);
+
+const uint IsDiffuseTextureBound = 1;
+const uint IsNormalTextureBound = 2;
+const uint IsMetallicRoughnessTextureBound = 4;
+const uint IsEmissiveTextureBound = 8;
+const uint IsOcclusionTextureBound = 16;
+
 layout(set = 2, binding = 0) uniform SceneInfo
 {
     vec3 AmbientLightColor;
@@ -23,6 +36,10 @@ layout(set = 2, binding = 0) uniform SceneInfo
 layout(set = 2, binding = 1) uniform MaterialInfo
 {
     vec4 DiffuseTint;
+    vec2 MetallicRoughnessFactor;
+	uint BoundTextureBitMask;
+
+	uint MaterialInfo_Padding0;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
@@ -30,6 +47,15 @@ layout(set = 3, binding = 1) uniform texture2D DiffuseTexture;
 
 layout(set = 4, binding = 0) uniform sampler NormalSampler;
 layout(set = 4, binding = 1) uniform texture2D NormalTexture;
+
+layout(set = 5, binding = 0) uniform sampler MetallicRoughnessSampler;
+layout(set = 5, binding = 1) uniform texture2D MetallicRoughnessTexture;
+
+layout(set = 6, binding = 0) uniform sampler EmissiveSampler;
+layout(set = 6, binding = 1) uniform texture2D EmissiveTexture;
+
+layout(set = 7, binding = 0) uniform sampler OcclusionSampler;
+layout(set = 7, binding = 1) uniform texture2D OcclusionTexture;
 
 layout(location=0) in Vertex
 {
@@ -43,83 +69,212 @@ layout(location=0) in Vertex
 
 layout(location = 0) out vec4 fsout_color;
 
-float lambert(vec3 N, vec3 L)
+// GGX/Towbridge-Reitz normal distribution function.
+// Uses Disney's reparametrization of alpha = roughness^2.
+float ndfGGX(float cosLh, float roughness)
 {
-  vec3 nrmN = normalize(N);
-  vec3 nrmL = normalize(L);
-  float result = dot(nrmN, nrmL);
-  return max(result, 0.0);
+	float alpha   = roughness * roughness;
+	float alphaSq = alpha * alpha;
+
+	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
+	return alphaSq / (PI * denom * denom);
+}
+
+// Single term for separable Schlick-GGX below.
+float gaSchlickG1(float cosTheta, float k)
+{
+	return cosTheta / (cosTheta * (1.0 - k) + k);
+}
+
+// Schlick-GGX approximation of geometric attenuation function using Smith's method.
+float gaSchlickGGX(float cosLi, float cosLo, float roughness)
+{
+	float r = roughness + 1.0;
+	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
+	return gaSchlickG1(cosLi, k) * gaSchlickG1(cosLo, k);
+}
+
+// Shlick's approximation of the Fresnel factor.
+vec3 fresnelSchlick(vec3 F0, float cosTheta)
+{
+	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 void main()
 {
-    // Calculate our basic lambert lighting
-    vec3 lighting = clamp(AmbientLightColor + DirectionalLightColor * lambert(vin.normal, DirectionalLightDirection), 0, 10);
-    
-    // Diffuse color
-    vec4 diffuseTexture = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord);
-    vec4 diffuse = diffuseTexture * DiffuseTint;
+    // Sample input textures to get shading model params.
+	vec3 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord).rgb;
 
-    // Specular color
-    float specPower = 15.0f;
-    float specIntensity = 0.5f;
+	// Get the metalic/roughness values
+	float metalness = 0.5f;
+	float roughness = 0.5f;
+	if ((BoundTextureBitMask & IsMetallicRoughnessTextureBound) == IsMetallicRoughnessTextureBound)
+	{
+		vec3 metalicRoughtness = texture(sampler2D(MetallicRoughnessTexture, MetallicRoughnessSampler), vin.texcoord).rgb;
+		metalness = metalicRoughtness.b;
+		roughness = metalicRoughtness.g;
+	}
+	else
+	{
+		metalness = MetallicRoughnessFactor.r;
+		roughness = MetallicRoughnessFactor.g;
+	}
 
-    vec3 specColor = vec3(0, 0, 0);
-    vec3 vertexToEye = normalize(vin.position - CameraPosition);
-    vec3 lightReflect = normalize(reflect(DirectionalLightDirection, vin.normal));
-    float specularFactor = dot(vertexToEye, lightReflect);
-    if (specularFactor > 0)
-    {
-        specularFactor = pow(abs(specularFactor), specPower);
-        specColor = DirectionalLightColor * specIntensity * specularFactor;
-    }
+	// Emmisive values
+	vec3 emissive = vec3(0);
+	if ((BoundTextureBitMask & IsEmissiveTextureBound) == IsEmissiveTextureBound)
+	{
+		emissive = texture(sampler2D(EmissiveTexture, EmissiveSampler), vin.texcoord).rgb;
+	}
 
-    // Extract the normal from the normal map  
-    vec4 normalTexture = texture(sampler2D(NormalTexture, NormalSampler), vin.texcoord);
-    vec3 normal = normalize(normalTexture.rgb * 2.0 - 1.0);
-    float normalDiffuse = max(dot(normal, -DirectionalLightDirection), 0.0);
-    vec3 bumpedDiffuse = normalDiffuse * diffuse.rgb;
-    
-    // Final result
-    vec3 final = (lighting * bumpedDiffuse) + specColor;
+    // Outgoing light direction (vector from world-space fragment position to the "eye").
+	vec3 Lo = normalize(CameraPosition - vin.position);
+
+    // Get current fragment's normal and transform to world space.
+    vec3 normalTexture = texture(sampler2D(NormalTexture, NormalSampler), vin.texcoord).rgb;
+	vec3 N = normalize(2.0 * normalTexture - 1.0);
+	N = normalize(vin.tangentBasis * N);
+
+    // Angle between surface normal and outgoing light direction.
+	float cosLo = max(0.0, dot(N, Lo));
+		
+	// Specular reflection vector.
+	vec3 Lr = 2.0 * cosLo * N - Lo;
+
+	// Fresnel reflectance at normal incidence (for metals use albedo color).
+	vec3 F0 = mix(Fdielectric, albedo, metalness);
+
+    // Direct lighting calculation for analytical lights.
+	vec3 directLighting = vec3(0);
+	for(int i=0; i<NumLights; ++i)
+	{
+		vec3 Li = DirectionalLightDirection;
+		vec3 Lradiance = DirectionalLightColor;
+
+		// Half-vector between Li and Lo.
+		vec3 Lh = normalize(Li + Lo);
+
+		// Calculate angles between surface normal and various light vectors.
+		float cosLi = max(0.0, dot(N, Li));
+		float cosLh = max(0.0, dot(N, Lh));
+
+		// Calculate Fresnel term for direct lighting. 
+		vec3 F  = fresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
+		// Calculate normal distribution for specular BRDF.
+		float D = ndfGGX(cosLh, roughness);
+		// Calculate geometric attenuation for specular BRDF.
+		float G = gaSchlickGGX(cosLi, cosLo, roughness);
+
+		// Diffuse scattering happens due to light being refracted multiple times by a dielectric medium.
+		// Metals on the other hand either reflect or absorb energy, so diffuse contribution is always zero.
+		// To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness.
+		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+
+		// Lambert diffuse BRDF.
+		// We don't scale by 1/PI for lighting & material units to be more convenient.
+		// See: https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
+		vec3 diffuseBRDF = kd * albedo;
+
+		// Cook-Torrance specular microfacet BRDF.
+		vec3 specularBRDF = (F * D * G) / max(Epsilon, 0.5f * cosLi * cosLo);
+
+		// Total contribution for this light.
+		directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
+	}
+
+	// Ambient lighting (IBL).
+	vec3 ambientLighting;
+	{
+		// Sample diffuse irradiance at normal direction.
+		vec3 irradiance = AmbientLightColor;
+
+		// Calculate Fresnel term for ambient lighting.
+		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
+		// use cosLo instead of angle with light's half-vector (cosLh above).
+		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
+		vec3 F = fresnelSchlick(F0, cosLo);
+
+		// Get diffuse contribution factor (as with direct lighting).
+		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+
+		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
+		vec3 diffuseIBL = kd * albedo * irradiance;
+
+		vec3 specularIrradiance = vec3(1.0f, 1.0f, 1.0f);
+
+		// Split-sum approximation factors for Cook-Torrance specular BRDF.
+		vec2 specularBRDF = vec2(0.6f, 0.05f);
+
+		// Total specular IBL contribution.
+		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
+
+		// Total ambient lighting contribution.
+		ambientLighting = diffuseIBL + specularIBL;
+	}
+
+    // Final lighting
+    vec3 final = directLighting + ambientLighting + emissive;
+
+    // Store our final output result, but we may overwrite it below.
+    // This is to avoid shader optimization removing things that are "never" used.
     vec3 result = final;
     
     if (ShadingMode == 1)
     {
         // [Debug] Draw Diffuse Map Only
-        result = (final - final) + diffuseTexture.rgb;
+        result = (final - final) + albedo;
     }
     else if (ShadingMode == 2)
     {
         // [Debug] Draw Normal Map Only
-        result = (final - final) + normalTexture.rgb;
+        result = (final - final) + normalTexture;
     }
-    else if (ShadingMode == 3)
+	else if (ShadingMode == 3)
+    {
+        // [Debug] Draw Metallic Map Only
+        result = (final - final) + vec3(0, 0, metalness);
+    }
+	else if (ShadingMode == 4)
+    {
+        // [Debug] Draw Roughness Map Only
+        result = (final - final) + vec3(0, roughness, 0);
+    }
+	else if (ShadingMode == 5)
+    {
+        // [Debug] Draw Emmisive Map Only
+        result = (final - final) + emissive;
+    }
+	else if (ShadingMode == 6)
+    {
+        // TODO!! [Debug] Draw Occlusion Map Only
+        result = (final - final) + vec3(0);
+    }
+    else if (ShadingMode == 7)
     {
         // [Debug] Lighting only
-        result = (final - final) + lighting;
+        result = (final - final) + directLighting;
     }
-    else if (ShadingMode == 4)
+    else if (ShadingMode == 8)
     {
         // [Debug] Specular only
-        result = (final - final) + specColor;
+        result = (final - final) + ambientLighting;
     }
-    else if (ShadingMode == 5)
+    else if (ShadingMode == 9)
     {
         // [Debug] Vertex Normal
         result = (final - final) + ((vin.normal + 1.0) * 0.5);
     }
-    else if (ShadingMode == 6)
+    else if (ShadingMode == 10)
     {
         // [Debug] Vertex Tangent
         result = (final - final) + ((vin.tangent + 1.0) * 0.5);
     }
-    else if (ShadingMode == 7)
+    else if (ShadingMode == 11)
     {
         // [Debug] Vertex BiTangent
         result = (final - final) + ((vin.bitangent + 1.0) * 0.5);
     }
-    else if (ShadingMode == 8)
+    else if (ShadingMode == 12)
     {
         // [Debug] Vertex TexCoords
         result = (final - final) + vec3(vin.texcoord, 0);

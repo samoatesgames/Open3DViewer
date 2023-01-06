@@ -95,6 +95,25 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_meshes.Clear();
         }
 
+        private bool FindParameter<TType>(IReadOnlyList<IMaterialParameter> parameters, string parameterName, out TType result)
+        {
+            var parameter = parameters.FirstOrDefault(x => x.Name == parameterName);
+            if (parameter == null)
+            {
+                result = default;
+                return false;
+            }
+
+            if (!(parameter.Value is TType value))
+            {
+                result = default;
+                return false;
+            }
+
+            result = value;
+            return true;
+        }
+
         private bool TryCreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform, out GLTFMesh gltfMesh)
         {
             if (primitive.IndexAccessor == null)
@@ -212,7 +231,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
                 var diffuseTintColor = Vector4.One;
-                
+                var metallicFactor = 0.0f;
+                var roughnessFactor = 0.0f;
+
                 Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
                     TextureSamplerIndex samplerIndex;
@@ -221,37 +242,42 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                         samplerIndex = TextureSamplerIndex.Diffuse;
 
                         // See if we have a diffuse tint color
-                        foreach (var parameter in materialChannel.Parameters)
+                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
                         {
-                            if (parameter.Name == "RGBA")
-                            {
-                                diffuseTintColor = (Vector4)parameter.Value;
-                                break;
-                            }
-                            
-                            if (parameter.Name == "RGB")
-                            {
-                                diffuseTintColor = new Vector4((Vector3)parameter.Value, 1.0f);
-                                break;
-                            }
+                            diffuseTintColor = rgba;
+                        }
+                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
+                        {
+                            diffuseTintColor = new Vector4(rgb, 1.0f);
                         }
                     }
                     else if (materialChannel.Key == "Normal")
                     {
                         samplerIndex = TextureSamplerIndex.Normal;
                     }
-                    //else if (materialChannel.Key == "MetallicRoughness")
-                    //{
-                    //    samplerIndex = TextureSamplerIndex.MetallicRoughness;
-                    //}
-                    //else if (materialChannel.Key == "Emissive")
-                    //{
-                    //    samplerIndex = TextureSamplerIndex.Emissive;
-                    //}
-                    //else if (materialChannel.Key == "Occlusion")
-                    //{
-                    //    samplerIndex = TextureSamplerIndex.Occlusion;
-                    //}
+                    else if (materialChannel.Key == "MetallicRoughness")
+                    {
+                        samplerIndex = TextureSamplerIndex.MetallicRoughness;
+
+                        // See if we have a fallback value
+                        if (FindParameter<float>(materialChannel.Parameters, "MetallicFactor", out var metal))
+                        {
+                            metallicFactor = metal;
+                        }
+                        
+                        if (FindParameter<float>(materialChannel.Parameters, "RoughnessFactor", out var roughness))
+                        {
+                            roughnessFactor = roughness;
+                        }
+                    }
+                    else if (materialChannel.Key == "Emissive")
+                    {
+                        samplerIndex = TextureSamplerIndex.Emissive;
+                    }
+                    else if (materialChannel.Key == "Occlusion")
+                    {
+                        samplerIndex = TextureSamplerIndex.Occlusion;
+                    }
                     else
                     {
                         // TODO: Log this unknown channel type so we can add support for it
@@ -266,6 +292,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 });
 
                 gltfMesh.SetDiffuseTint(diffuseTintColor);
+                gltfMesh.SetMetallicRoughnessValues(metallicFactor, roughnessFactor);
+
+
                 foreach (var entry in loadedTextures)
                 {
                     gltfMesh.SetTexture(entry.Key, entry.Value);
