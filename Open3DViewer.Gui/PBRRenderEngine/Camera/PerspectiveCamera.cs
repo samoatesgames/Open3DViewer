@@ -159,7 +159,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             }
             else
             {
-                Position = Vector3.UnitZ * -5f;
+                Position = Vector3.UnitZ * 5f;
                 m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Position, Vector3.Zero, Vector3.UnitY);
             }
 
@@ -174,12 +174,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
         public void ResetCamera()
         {
-            Position = Vector3.UnitZ * -5f;
-            m_yawRotation = -0.5f;
-            m_pitchRotation = -6.0f;
+            Position = Vector3.UnitZ * 5f;
+            m_yawRotation = -6.6f;
+            m_pitchRotation = 6.1f;
             m_zoomDelta = 0.0f;
             m_entitySize = m_lookAtEntity?.GetBoundingBox().Extent.Length() ?? 0.0f;
-            m_zoomAmount = m_entitySize * -2.5f;
+            m_zoomAmount = m_entitySize * 2.5f;
         }
     }
 }
