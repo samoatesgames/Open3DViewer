@@ -1,16 +1,28 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Open3DViewer.Gui.ViewModel
 {
-    internal class ApplicationViewModel
+    internal class ApplicationViewModel : ObservableObject
     {
+        private readonly PBRRenderEngine.PBRRenderEngine m_engine;
+
         public ApplicationTabsViewModel Tabs { get; }
         public ApplicationCommands Commands { get; }
 
+        public bool IsGridEnabled
+        {
+            get => m_engine.IsGridVisible;
+            set => m_engine.SetGridVisible(value);
+        }
+
         public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
-            renderEngine.OnInitialized += RenderEngineOnOnInitialized;
+            m_engine = renderEngine;
+            m_engine.OnInitialized += RenderEngineOnOnInitialized;
+            m_engine.OnGridVisibilityChanged += RenderEngineOnOnGridVisibilityChanged;
+
             Tabs = new ApplicationTabsViewModel(renderEngine);
             Commands = new ApplicationCommands(renderEngine, renderViewControl, Tabs);
         }
@@ -29,6 +41,11 @@ namespace Open3DViewer.Gui.ViewModel
                 });
             }
             engine.OnInitialized -= RenderEngineOnOnInitialized;
+        }
+
+        private void RenderEngineOnOnGridVisibilityChanged(PBRRenderEngine.PBRRenderEngine engine, bool visible)
+        {
+            OnPropertyChanged(nameof(IsGridEnabled));
         }
     }
 }

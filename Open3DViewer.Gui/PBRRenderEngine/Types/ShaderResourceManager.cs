@@ -58,9 +58,10 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         private void LoadShaders()
         {
-            foreach (var shader in new[]
+            foreach (var shader in new IRenderShader[]
                      {
-                         new ObjectShader()
+                         new ObjectShader(),
+                         new GridShader()
                      })
             {
                 LoadShader(shader);

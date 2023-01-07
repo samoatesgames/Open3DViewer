@@ -8,7 +8,9 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Open3DViewer.Gui.PBRRenderEngine.Meshes;
 using Veldrid;
+using Vortice.Mathematics;
 
 namespace Open3DViewer.Gui.PBRRenderEngine
 {
@@ -20,6 +22,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         private SceneInfo m_sceneInfo = SceneInfo.Create();
         private DeviceBuffer m_sceneInfoBuffer;
 
+        private bool m_gridVisible;
+        private GridMesh m_grid;
         private PerspectiveCamera m_camera;
 
         private readonly long m_fixedUpdateTickCount = TimeSpan.FromMilliseconds(50).Ticks;
@@ -27,6 +31,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         
         private GLTFEntity m_entity;
         public GLTFScene ActiveScene => m_entity?.Scene;
+        public bool IsGridVisible => m_gridVisible;
 
         public TextureResourceManager TextureResourceManager { get; private set; }
         public ShaderResourceManager ShaderResourceManager { get; private set; }
@@ -44,6 +49,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public delegate void RenderEngineInitialized(PBRRenderEngine engine);
         public event RenderEngineInitialized OnInitialized;
 
+        public delegate void RenderEngineGridVisibilityChanged(PBRRenderEngine engine, bool isVisible);
+        public event RenderEngineGridVisibilityChanged OnGridVisibilityChanged;
+
         public void Initialize(GraphicsDevice graphicsDevice, ResourceFactory factory, Swapchain swapchain)
         {
             GraphicsDevice = graphicsDevice;
@@ -54,7 +62,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             ShaderResourceManager = new ShaderResourceManager(this);
 
             m_camera = new PerspectiveCamera(this, factory);
-            
+
+            RecreateGrid();
+
             var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<SceneInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
             m_sceneInfoBuffer = ResourceFactory.CreateBuffer(bufferDescription);
             m_sceneInfoBuffer.Name = "SceneInfo_Buffer";
@@ -84,6 +94,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_sceneInfo.CameraPosition = m_camera.Position;
             commandList.UpdateBuffer(m_sceneInfoBuffer, 0, ref m_sceneInfo);
 
+            if (m_gridVisible)
+            {
+                m_grid?.Render(commandList);
+            }
+            
             m_entity?.Render(commandList);
         }
         
@@ -115,6 +130,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         public void OnKeyDown(RenderViewControl.RenderViewControl control, KeyEventArgs args)
         {
             m_camera.OnKeyDown(control, args);
+
+            if (args.Key == Key.G)
+            {
+                SetGridVisible(!m_gridVisible);
+            }
         }
 
         public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
@@ -151,6 +171,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
                 m_entity = null;
             }
 
+            m_grid?.Dispose();
+            m_grid = null;
+
             GLTFScene gltfScene = null;
             await Task.Run(() =>
             {
@@ -162,12 +185,38 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
             if (gltfScene == null)
             {
+                RecreateGrid();
                 return false;
             }
 
             m_entity = new GLTFEntity(gltfScene);
             m_camera.LookAt(m_entity);
+            RecreateGrid(m_entity.GetBoundingBox());
             return true;
+        }
+
+        private void RecreateGrid()
+        {
+            RecreateGrid(new BoundingBox(Vector3.One * -2, Vector3.One * 2));
+        }
+
+        private void RecreateGrid(BoundingBox entityBounds)
+        {
+            m_grid?.Dispose();
+
+            var size = Math.Max(entityBounds.Extent.X, entityBounds.Extent.Z);
+            m_grid = new GridMesh(this, size * 2.0f, entityBounds.Minimum.Y);
+        }
+
+        public void SetGridVisible(bool visible)
+        {
+            if (m_gridVisible == visible)
+            {
+                return;
+            }
+
+            m_gridVisible = visible;
+            OnGridVisibilityChanged?.Invoke(this, m_gridVisible);
         }
 
         public BindableResource GetSharedResource(CoreSharedResource resourceType)

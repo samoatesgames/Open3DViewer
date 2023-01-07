@@ -150,7 +150,7 @@
                     <ui:MenuItem Header="Hide All Panels" InputGestureText="F9" IsEnabled="False" Command="{Binding Commands.CommandViewHideAllPanels}" />
                     <ui:MenuItem Header="Property Panel" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewPropertyPanel}" />
                     <ui:MenuItem Header="Animation Panel" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewAnimationPanel}" />
-                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" IsEnabled="False" Command="{Binding Commands.CommandViewGrid}" />
+                    <ui:MenuItem Header="Grid" InputGestureText="G" IsCheckable="True" IsChecked="{Binding IsGridEnabled}" />
                     <Separator />
                     <ui:MenuItem Header="Zoom In" InputGestureText="+" Command="{Binding Commands.CommandViewZoomIn}" />
                     <ui:MenuItem Header="Zoom Out" InputGestureText="-" Command="{Binding Commands.CommandViewZoomOut}" />

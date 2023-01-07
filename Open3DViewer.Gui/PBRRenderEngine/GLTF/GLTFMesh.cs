@@ -156,36 +156,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             RegisterGraphicsResource(2, constantInfoSet);
 
             // Setup texture sampler resources
-            var samplerMask = 1;
-            
-            foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
-            {
-                var textureLayout = factory.CreateResourceLayout(
-                    new ResourceLayoutDescription(
-                        new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler, ShaderStages.Fragment),
-                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)
-                    )
-                );
-                textureLayout.Name = $"{samplerType}_TextureLayout";
-                resourceLayouts.Add(textureLayout);
-
-                if (!m_textureViews.TryGetValue(samplerType, out var textureView))
-                {
-                    textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
-                }
-                else
-                {
-                    m_materialInfo.BoundTextureBitMask |= (uint)samplerMask;
-                }
-                samplerMask *= 2;
-
-                var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                    textureLayout,
-                    engine.GraphicsDevice.LinearSampler,
-                    textureView));
-                textureSet.Name = $"{samplerType}_TextureSet";
-                RegisterGraphicsResource((uint)samplerType + 3, textureSet);
-            }
+            SetupTextureSamplers(engine, out var textureLayouts);
+            resourceLayouts.AddRange(textureLayouts);
 
             var pipelineDescription = new GraphicsPipelineDescription
             {
@@ -211,6 +183,45 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             };
 
             return factory.CreateGraphicsPipeline(pipelineDescription);
+        }
+
+        private void SetupTextureSamplers(PBRRenderEngine engine, out List<ResourceLayout> textureLayouts)
+        {
+            var factory = engine.ResourceFactory;
+            textureLayouts = new List<ResourceLayout>();
+
+            var samplerMask = 1;
+            foreach (TextureSamplerIndex samplerType in Enum.GetValues(typeof(TextureSamplerIndex)))
+            {
+                var textureLayout = factory.CreateResourceLayout(
+                    new ResourceLayoutDescription(
+                        new ResourceLayoutElementDescription($"{samplerType}Sampler", ResourceKind.Sampler,
+                            ShaderStages.Fragment),
+                        new ResourceLayoutElementDescription($"{samplerType}Texture", ResourceKind.TextureReadOnly,
+                            ShaderStages.Fragment)
+                    )
+                );
+                textureLayout.Name = $"{samplerType}_TextureLayout";
+                textureLayouts.Add(textureLayout);
+
+                if (!m_textureViews.TryGetValue(samplerType, out var textureView))
+                {
+                    textureView = m_engine.TextureResourceManager.GetFallbackTexture(samplerType);
+                }
+                else
+                {
+                    m_materialInfo.BoundTextureBitMask |= (uint)samplerMask;
+                }
+
+                samplerMask *= 2;
+
+                var textureSet = engine.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                    textureLayout,
+                    engine.GraphicsDevice.LinearSampler,
+                    textureView));
+                textureSet.Name = $"{samplerType}_TextureSet";
+                RegisterGraphicsResource((uint)samplerType + 3, textureSet);
+            }
         }
 
         private void CreateWorldMatrixResources(PBRRenderEngine engine, out ResourceLayout worldLayout, out ResourceSet worldSet)
