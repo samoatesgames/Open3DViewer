@@ -104,6 +104,7 @@ void main()
 {
     // Sample input textures to get shading model params.
 	vec3 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord).rgb;
+	albedo *= DiffuseTint.xyz;
 
 	// Get the metalic/roughness values
 	float metalness = 1.0f;
