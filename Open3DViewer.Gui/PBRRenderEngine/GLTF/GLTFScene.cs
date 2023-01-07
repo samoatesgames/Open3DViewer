@@ -238,6 +238,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 var emissiveStrength = 1.0f;
                 var emissiveTintColor = Vector3.Zero;
 
+                var occlusionStrength = 1.0f;
+
                 Parallel.ForEach(primitive.Material.Channels, materialChannel =>
                 {
                     TextureSamplerIndex samplerIndex;
@@ -296,6 +298,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                     else if (materialChannel.Key == "Occlusion")
                     {
                         samplerIndex = TextureSamplerIndex.Occlusion;
+
+                        if (FindParameter<float>(materialChannel.Parameters, "OcclusionStrength", out var occlusion))
+                        {
+                            occlusionStrength = occlusion;
+                        }
                     }
                     else
                     {
@@ -313,6 +320,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 gltfMesh.SetDiffuseTint(diffuseTintColor);
                 gltfMesh.SetMetallicRoughnessValues(metallicFactor, roughnessFactor);
                 gltfMesh.SetEmission(emissiveTintColor, emissiveStrength);
+                gltfMesh.SetOcclusion(occlusionStrength);
 
                 foreach (var entry in loadedTextures)
                 {

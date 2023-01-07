@@ -9,9 +9,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         public Vector4 Tint;
         public Vector2 MetallicRoughnessFactors;
         public uint BoundTextureBitMask;
-
-        public uint MaterialInfo_Padding0;
-
+        public float OcclusionStrength;
         public Vector4 EmissiveFactors;
 
         public static MaterialInfo Create()
@@ -21,7 +19,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 Tint = Vector4.One,
                 MetallicRoughnessFactors = Vector2.Zero,
                 BoundTextureBitMask = 0,
-                MaterialInfo_Padding0 = 0,
+                OcclusionStrength = 1,
                 EmissiveFactors = new Vector4(0, 0, 0, 1)
             };
         }

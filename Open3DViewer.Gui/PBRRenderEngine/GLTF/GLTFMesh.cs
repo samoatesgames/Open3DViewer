@@ -81,6 +81,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.EmissiveFactors = new Vector4(emissiveTintColor, emissiveStrength);
         }
 
+        public void SetOcclusion(float occlusionStrength)
+        {
+            m_materialInfo.OcclusionStrength = occlusionStrength;
+        }
+
         public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();

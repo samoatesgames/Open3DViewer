@@ -38,9 +38,7 @@ layout(set = 2, binding = 1) uniform MaterialInfo
     vec4 DiffuseTint;
     vec2 MetallicRoughnessFactor;
 	uint BoundTextureBitMask;
-
-	uint MaterialInfo_Padding0;
-
+	float OcclusionStrength;
 	vec4 EmissiveFactors;
 };
 
@@ -108,19 +106,16 @@ void main()
 	vec3 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord).rgb;
 
 	// Get the metalic/roughness values
-	float metalness = 0.5f;
-	float roughness = 0.5f;
+	float metalness = 1.0f;
+	float roughness = 1.0f;
 	if ((BoundTextureBitMask & IsMetallicRoughnessTextureBound) == IsMetallicRoughnessTextureBound)
 	{
 		vec3 metalicRoughtness = texture(sampler2D(MetallicRoughnessTexture, MetallicRoughnessSampler), vin.texcoord).rgb;
 		metalness = metalicRoughtness.b;
 		roughness = metalicRoughtness.g;
 	}
-	else
-	{
-		metalness = MetallicRoughnessFactor.r;
-		roughness = MetallicRoughnessFactor.g;
-	}
+	metalness *= MetallicRoughnessFactor.r;
+	roughness *= MetallicRoughnessFactor.g;
 
 	// Emmisive values
 	vec3 emissive = EmissiveFactors.xyz;
@@ -129,6 +124,14 @@ void main()
 		emissive *= texture(sampler2D(EmissiveTexture, EmissiveSampler), vin.texcoord).rgb;
 	}
 	emissive *= EmissiveFactors.w;
+
+	// Occlusion values
+	float occlision = 1;
+	if ((BoundTextureBitMask & IsOcclusionTextureBound) == IsOcclusionTextureBound)
+	{
+		occlision = texture(sampler2D(OcclusionTexture, OcclusionSampler), vin.texcoord).r;
+	}
+	occlision *= OcclusionStrength;
 
     // Outgoing light direction (vector from world-space fragment position to the "eye").
 	vec3 Lo = normalize(CameraPosition - vin.position);
@@ -216,7 +219,7 @@ void main()
 	}
 
     // Final lighting
-    vec3 final = directLighting + ambientLighting + emissive;
+    vec3 final = ((directLighting + ambientLighting) * occlision) + emissive;
 
     // Store our final output result, but we may overwrite it below.
     // This is to avoid shader optimization removing things that are "never" used.
@@ -249,8 +252,8 @@ void main()
     }
 	else if (ShadingMode == 6)
     {
-        // TODO!! [Debug] Draw Occlusion Map Only
-        result = (final - final) + vec3(0);
+        // [Debug] Draw Occlusion Map Only
+        result = (final - final) + occlision;
     }
     else if (ShadingMode == 7)
     {
