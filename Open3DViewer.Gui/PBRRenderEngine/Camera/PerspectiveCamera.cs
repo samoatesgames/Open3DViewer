@@ -124,12 +124,12 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
 
         public void ZoomIn()
         {
-            m_zoomDelta += (m_entitySize * 0.01f);
+            m_zoomDelta -= (m_entitySize * 0.01f);
         }
 
         public void ZoomOut()
         {
-            m_zoomDelta -= (m_entitySize * 0.01f);
+            m_zoomDelta += (m_entitySize * 0.01f);
         }
 
         public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
@@ -141,7 +141,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Camera
             var newZoom = m_zoomAmount + m_zoomDelta;
             m_zoomDelta *= 0.75f;
 
-            if (newZoom <= -(m_entitySize * 0.5f))
+            if (newZoom > (m_entitySize * 0.25f))
             {
                 m_zoomAmount = newZoom;
             }
