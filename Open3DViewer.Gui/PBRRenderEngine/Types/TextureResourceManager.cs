@@ -60,17 +60,24 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 return existingTexture;
             }
 
-            using (var stream = new MemoryStream(textureBytes, false))
+            try
             {
-                var texture = LoadTexture(stream);
-
-                if (!m_gltfTextureCache.TryAdd(textureHash, texture))
+                using (var stream = new MemoryStream(textureBytes, false))
                 {
-                    texture.Dispose();
-                    return m_gltfTextureCache[textureHash];
+                    var texture = LoadTexture(stream);
+
+                    if (!m_gltfTextureCache.TryAdd(textureHash, texture))
+                    {
+                        texture.Dispose();
+                        return m_gltfTextureCache[textureHash];
+                    }
+
+                    return texture;
                 }
-                
-                return texture;
+            }
+            catch
+            {
+                return null;
             }
         }
 

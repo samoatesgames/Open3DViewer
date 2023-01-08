@@ -1,16 +1,15 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
 using Open3DViewer.Gui.PBRRenderEngine.Shaders;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
+using SharpGLTF.Schema2;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using SharpGLTF.Schema2;
 using Veldrid;
 using Vortice.Mathematics;
-using System.Linq;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
@@ -69,6 +68,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
         public void SetTexture(TextureSamplerIndex samplerIndex, TextureView textureView)
         {
+            if (textureView == null)
+            {
+                return;
+            }
+
             textureView.Name = $"TextureView_{samplerIndex}";
             m_textureViews[samplerIndex] = textureView;
         }
@@ -93,13 +97,13 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             m_materialInfo.OcclusionStrength = occlusionStrength;
         }
 
-        public void Initialize(VertexLayoutFull[] vertices, ushort[] indices)
+        public void Initialize(VertexLayoutFull[] vertices, uint[] indices)
         {
             var sizeInByes = vertices[0].GetSizeInBytes();
             m_indexCount = (uint)indices.Length;
 
             m_vertexBuffer = m_engine.ResourceFactory.CreateBuffer(new BufferDescription((uint)(vertices.Length * sizeInByes), BufferUsage.VertexBuffer));
-            m_indexBuffer = m_engine.ResourceFactory.CreateBuffer(new BufferDescription((uint)(indices.Length * sizeof(ushort)), BufferUsage.IndexBuffer));
+            m_indexBuffer = m_engine.ResourceFactory.CreateBuffer(new BufferDescription((uint)(indices.Length * sizeof(uint)), BufferUsage.IndexBuffer));
 
             m_engine.GraphicsDevice.UpdateBuffer(m_vertexBuffer, 0, vertices);
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
@@ -133,7 +137,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             commandList.UpdateBuffer(m_materialInfoBuffer, 0, ref m_materialInfo);
 
             commandList.SetVertexBuffer(0, m_vertexBuffer);
-            commandList.SetIndexBuffer(m_indexBuffer, IndexFormat.UInt16);
+            commandList.SetIndexBuffer(m_indexBuffer, IndexFormat.UInt32);
             commandList.SetPipeline(m_pipeline);
 
             foreach (var entry in m_graphicsResources)

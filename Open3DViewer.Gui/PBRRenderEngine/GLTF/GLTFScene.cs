@@ -136,14 +136,23 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 // We must have indices to render something...
                 // TODO: log error
+                // TODO: Morph target gltfs don't have indices 
                 gltfMesh = null;
                 return false;
             }
 
-            var indices = new List<ushort>();
+            if (primitive.DrawPrimitiveType != PrimitiveType.TRIANGLES)
+            {
+                // TODO: Support none triangle geometry
+                // TODO: log error
+                gltfMesh = null;
+                return false;
+            }
+
+            var indices = new List<uint>();
             foreach (var i in primitive.IndexAccessor.AsIndicesArray())
             {
-                indices.Add((ushort)i);
+                indices.Add(i);
             }
 
             IList<Vector3> positionStream = null;
