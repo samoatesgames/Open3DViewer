@@ -1,8 +1,6 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
 using SharpGLTF.Schema2;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,77 +13,114 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
     public class GLTFScene : IDisposable
     {
-        public static bool TryLoad(PBRRenderEngine engine, string gltfFilePath, out GLTFScene scene)
+        public static async Task<GLTFScene> TryLoad(PBRRenderEngine engine, string gltfFilePath)
         {
             if (gltfFilePath == null)
             {
-                scene = null;
-                return false;
+                return null;
             }
             
             if (!File.Exists(gltfFilePath))
             {
-                scene = null;
-                return false;
+                return null;
             }
 
             try
             {
                 var model = ModelRoot.Load(gltfFilePath);
-                scene = new GLTFScene(engine, model);
-                return true;
+                var scene = new GLTFScene(engine, model);
+                await scene.Initialize();
+                return scene;
             }
             catch
             {
-                scene = null;
-                return false;
+                return null;
             }
         }
-        
+
+        private readonly PBRRenderEngine m_engine;
         private readonly List<GLTFMesh> m_meshes = new List<GLTFMesh>();
 
         public ModelRoot ModelRoot { get; }
-        public BoundingBox BoundingBox { get; }
+        public BoundingBox BoundingBox { get; private set; }
 
         private GLTFScene(PBRRenderEngine engine, ModelRoot modelRoot)
         {
+            m_engine = engine;
             ModelRoot = modelRoot;
+        }
 
-            var primitiveMap = new Dictionary<MeshPrimitive, Node>();
-            foreach (var node in modelRoot.LogicalNodes)
+        private async Task Initialize()
+        {
+            // Pre load all textures
+            var textureManager = m_engine.TextureResourceManager;
+            var textureLoadJobs = new List<Task>();
+            foreach (var texture in ModelRoot.LogicalTextures)
             {
-                if (node.Mesh == null)
+                textureLoadJobs.Add(Task.Run(() =>
                 {
-                    continue;
-                }
-
-                foreach (var primitive in node.Mesh.Primitives)
-                {
-                    primitiveMap[primitive] = node;
-                }
+                    textureManager.LoadTexture(texture);
+                }));
             }
 
-            var createdMeshes = new ConcurrentBag<GLTFMesh>();
-            Parallel.ForEach(primitiveMap, primitiveEntry =>
+            // Load all meshes by recursing the scene graph.
+            var meshLoadJobs = new List<Task<GLTFMesh>>();
+            foreach (var scene in ModelRoot.LogicalScenes)
             {
-                var primitive = primitiveEntry.Key;
-                var node = primitiveEntry.Value;
+                GenerateMeshLoadJobs(scene.VisualChildren, Matrix4x4.Identity, meshLoadJobs);
+            }
 
-                if (TryCreateRenderMesh(engine, primitive, node.LocalMatrix, out var gltfMesh))
-                {
-                    createdMeshes.Add(gltfMesh);
-                }
-            });
+            await Task.WhenAll(textureLoadJobs);
+            var meshes = await Task.WhenAll(meshLoadJobs);
 
+            var processMaterialJobs = new List<Task>();
             var sceneBounds = new BoundingBox();
-            foreach (var mesh in createdMeshes)
+            foreach (var mesh in meshes.Where(x => x != null))
             {
+                // Apply the material parameters
+                processMaterialJobs.AddRange(mesh.ProcessMaterial());
+
+                // Update the scene bounds to include all the valid meshes bounds.
                 sceneBounds = BoundingBox.CreateMerged(sceneBounds, mesh.BoundingBox);
+
+                // Store our valid mesh, so we can render it.
                 m_meshes.Add(mesh);
             }
+
+            // Store the full scene bounds.
             BoundingBox = sceneBounds;
+
+            await Task.WhenAll(processMaterialJobs);
+
+            foreach (var mesh in m_meshes)
+            {
+                mesh.RecreatePipeline();
+            }
         }
-        
+
+        private void GenerateMeshLoadJobs(IEnumerable<Node> nodes, Matrix4x4 parentTransform, List<Task<GLTFMesh>> meshLoadJobs)
+        {
+            foreach (var node in nodes)
+            {
+                if (node.Mesh != null)
+                {
+                    foreach (var primitive in node.Mesh.Primitives)
+                    {
+                        meshLoadJobs.Add(Task.Run(() =>
+                        {
+                            if (!TryCreateRenderMesh(m_engine, primitive, node.LocalMatrix * parentTransform, out var gltfMesh))
+                            {
+                                return null;
+                            }
+                            return gltfMesh;
+                        }));
+                    }
+                }
+
+                GenerateMeshLoadJobs(node.VisualChildren, node.LocalMatrix * parentTransform, meshLoadJobs);
+            }
+        }
+
         public void Dispose()
         {
             foreach (var mesh in m_meshes)
@@ -93,25 +128,6 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
                 mesh.Dispose();
             }
             m_meshes.Clear();
-        }
-
-        private bool FindParameter<TType>(IReadOnlyList<IMaterialParameter> parameters, string parameterName, out TType result)
-        {
-            var parameter = parameters.FirstOrDefault(x => x.Name == parameterName);
-            if (parameter == null)
-            {
-                result = default;
-                return false;
-            }
-
-            if (!(parameter.Value is TType value))
-            {
-                result = default;
-                return false;
-            }
-
-            result = value;
-            return true;
         }
 
         private bool TryCreateRenderMesh(PBRRenderEngine engine, MeshPrimitive primitive, Matrix4x4 transform, out GLTFMesh gltfMesh)
@@ -225,109 +241,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             var transformedVertexPositions = positionStream.Select(x => Vector3.Transform(x, transform)).ToArray();
             var boundingBox = BoundingBox.CreateFromPoints(transformedVertexPositions);
-            gltfMesh = new GLTFMesh(engine, transform, boundingBox);
-
-            if (primitive.Material != null)
-            {
-                var loadedTextures = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
-                var diffuseTintColor = Vector4.One;
-
-                var metallicFactor = 0.0f;
-                var roughnessFactor = 0.0f;
-
-                var emissiveStrength = 1.0f;
-                var emissiveTintColor = Vector3.Zero;
-
-                var occlusionStrength = 1.0f;
-
-                Parallel.ForEach(primitive.Material.Channels, materialChannel =>
-                {
-                    TextureSamplerIndex samplerIndex;
-                    if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
-                    {
-                        samplerIndex = TextureSamplerIndex.Diffuse;
-
-                        // See if we have a diffuse tint color
-                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
-                        {
-                            diffuseTintColor = rgba;
-                        }
-                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
-                        {
-                            diffuseTintColor = new Vector4(rgb, 1.0f);
-                        }
-                    }
-                    else if (materialChannel.Key == "Normal")
-                    {
-                        samplerIndex = TextureSamplerIndex.Normal;
-                    }
-                    else if (materialChannel.Key == "MetallicRoughness")
-                    {
-                        samplerIndex = TextureSamplerIndex.MetallicRoughness;
-
-                        // See if we have a fallback value
-                        if (FindParameter<float>(materialChannel.Parameters, "MetallicFactor", out var metal))
-                        {
-                            metallicFactor = metal;
-                        }
-                        
-                        if (FindParameter<float>(materialChannel.Parameters, "RoughnessFactor", out var roughness))
-                        {
-                            roughnessFactor = roughness;
-                        }
-                    }
-                    else if (materialChannel.Key == "Emissive")
-                    {
-                        samplerIndex = TextureSamplerIndex.Emissive;
-
-                        if (FindParameter<float>(materialChannel.Parameters, "EmissiveStrength", out var strength))
-                        {
-                            emissiveStrength = strength;
-                        }
-
-                        // See if we have a emissive tint color
-                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
-                        {
-                            emissiveTintColor = new Vector3(rgba.X, rgba.Y, rgba.Z);
-                        }
-                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
-                        {
-                            emissiveTintColor = rgb;
-                        }
-                    }
-                    else if (materialChannel.Key == "Occlusion")
-                    {
-                        samplerIndex = TextureSamplerIndex.Occlusion;
-
-                        if (FindParameter<float>(materialChannel.Parameters, "OcclusionStrength", out var occlusion))
-                        {
-                            occlusionStrength = occlusion;
-                        }
-                    }
-                    else
-                    {
-                        // TODO: Log this unknown channel type so we can add support for it
-                        return;
-                    }
-                    
-                    if (materialChannel.Texture != null)
-                    {
-                        var loadedTexture = engine.TextureResourceManager.LoadTexture(materialChannel.Texture);
-                        loadedTextures[samplerIndex] = loadedTexture;
-                    }
-                });
-
-                gltfMesh.SetDiffuseTint(diffuseTintColor);
-                gltfMesh.SetMetallicRoughnessValues(metallicFactor, roughnessFactor);
-                gltfMesh.SetEmission(emissiveTintColor, emissiveStrength);
-                gltfMesh.SetOcclusion(occlusionStrength);
-
-                foreach (var entry in loadedTextures)
-                {
-                    gltfMesh.SetTexture(entry.Key, entry.Value);
-                }
-            }
-
+            gltfMesh = new GLTFMesh(engine, transform, boundingBox, primitive.Material);
             gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
             return true;
         }

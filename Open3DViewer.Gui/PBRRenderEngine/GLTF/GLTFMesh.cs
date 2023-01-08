@@ -2,11 +2,15 @@
 using Open3DViewer.Gui.PBRRenderEngine.Shaders;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using SharpGLTF.Schema2;
 using Veldrid;
 using Vortice.Mathematics;
+using System.Linq;
 
 namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 {
@@ -26,14 +30,17 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
         private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
 
+        private readonly Material m_material;
         private MaterialInfo m_materialInfo;
         private readonly DeviceBuffer m_materialInfoBuffer;
 
         public BoundingBox BoundingBox { get; } 
 
-        public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox)
+        public GLTFMesh(PBRRenderEngine engine, Matrix4x4 localTransform, BoundingBox boundingBox, Material material)
         {
             m_engine = engine;
+            m_material = material;
+
             m_worldBuffer = engine.ResourceFactory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer));
             m_worldBuffer.Name = "World_Buffer";
 
@@ -96,12 +103,15 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
 
             m_engine.GraphicsDevice.UpdateBuffer(m_vertexBuffer, 0, vertices);
             m_engine.GraphicsDevice.UpdateBuffer(m_indexBuffer, 0, indices);
-            
-            m_pipeline = CreatePipeline<ObjectShader>(m_engine);
 
 #if DEBUG
             m_engine.ShaderResourceManager.OnShaderReloaded += OnShaderReloaded;
 #endif
+        }
+
+        public void RecreatePipeline()
+        {
+            m_pipeline = CreatePipeline<ObjectShader>(m_engine);
         }
 
 #if DEBUG
@@ -111,7 +121,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
             {
                 return;
             }
-            m_pipeline = CreatePipeline<ObjectShader>(m_engine);
+            RecreatePipeline();
         }
 #endif
 
@@ -289,6 +299,124 @@ namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
         private void RegisterGraphicsResource(uint slot, ResourceSet resourceSet)
         {
             m_graphicsResources[slot] = resourceSet;
+        }
+
+        public List<Task> ProcessMaterial()
+        {
+            var textureResourceManager = m_engine.TextureResourceManager;
+
+            var jobs = new List<Task>();
+
+            foreach (var materialChannel in m_material.Channels)
+            {
+                jobs.Add(Task.Run(() =>
+                {
+                    TextureSamplerIndex samplerIndex;
+                    if (materialChannel.Key == "BaseColor" || materialChannel.Key == "Diffuse")
+                    {
+                        samplerIndex = TextureSamplerIndex.Diffuse;
+
+                        // See if we have a diffuse tint color
+                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
+                        {
+                            SetDiffuseTint(rgba);
+                        }
+                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
+                        {
+                            SetDiffuseTint(new Vector4(rgb, 1.0f));
+                        }
+                    }
+                    else if (materialChannel.Key == "Normal")
+                    {
+                        samplerIndex = TextureSamplerIndex.Normal;
+                    }
+                    else if (materialChannel.Key == "MetallicRoughness")
+                    {
+                        samplerIndex = TextureSamplerIndex.MetallicRoughness;
+
+                        var metallicFactor = 1.0f;
+                        var roughnessFactor = 1.0f;
+
+                        // See if we have a fallback value
+                        if (FindParameter<float>(materialChannel.Parameters, "MetallicFactor", out var metal))
+                        {
+                            metallicFactor = metal;
+                        }
+
+                        if (FindParameter<float>(materialChannel.Parameters, "RoughnessFactor", out var roughness))
+                        {
+                            roughnessFactor = roughness;
+                        }
+
+                        SetMetallicRoughnessValues(metallicFactor, roughnessFactor);
+                    }
+                    else if (materialChannel.Key == "Emissive")
+                    {
+                        samplerIndex = TextureSamplerIndex.Emissive;
+
+                        var emissiveStrength = 0.0f;
+
+                        if (FindParameter<float>(materialChannel.Parameters, "EmissiveStrength", out var strength))
+                        {
+                            emissiveStrength = strength;
+                        }
+
+                        var emissiveTintColor = Vector3.Zero;
+
+                        // See if we have a emissive tint color
+                        if (FindParameter<Vector4>(materialChannel.Parameters, "RGBA", out var rgba))
+                        {
+                            emissiveTintColor = new Vector3(rgba.X, rgba.Y, rgba.Z);
+                        }
+                        else if (FindParameter<Vector3>(materialChannel.Parameters, "RGB", out var rgb))
+                        {
+                            emissiveTintColor = rgb;
+                        }
+
+                        SetEmission(emissiveTintColor, emissiveStrength);
+                    }
+                    else if (materialChannel.Key == "Occlusion")
+                    {
+                        samplerIndex = TextureSamplerIndex.Occlusion;
+
+                        if (FindParameter<float>(materialChannel.Parameters, "OcclusionStrength", out var occlusion))
+                        {
+                            SetOcclusion(occlusion);
+                        }
+                    }
+                    else
+                    {
+                        // TODO: Log this unknown channel type so we can add support for it
+                        return;
+                    }
+
+                    if (materialChannel.Texture != null)
+                    {
+                        SetTexture(samplerIndex, textureResourceManager.LoadTexture(materialChannel.Texture));
+                    }
+                }));
+            }
+
+            return jobs;
+        }
+
+        private bool FindParameter<TType>(IReadOnlyList<IMaterialParameter> parameters, string parameterName, out TType result)
+        {
+            var parameter = parameters.FirstOrDefault(x => x.Name == parameterName);
+            if (parameter == null)
+            {
+                result = default;
+                return false;
+            }
+
+            if (!(parameter.Value is TType value))
+            {
+                result = default;
+                return false;
+            }
+
+            result = value;
+            return true;
         }
     }
 }

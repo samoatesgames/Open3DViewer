@@ -174,15 +174,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_grid?.Dispose();
             m_grid = null;
 
-            GLTFScene gltfScene = null;
-            await Task.Run(() =>
-            {
-                if (!GLTFScene.TryLoad(this, assetPath, out gltfScene))
-                {
-                    gltfScene = null;
-                }
-            });
-
+            var gltfScene = await GLTFScene.TryLoad(this, assetPath);
             if (gltfScene == null)
             {
                 RecreateGrid();
