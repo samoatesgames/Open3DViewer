@@ -6,6 +6,8 @@ An open source 3D model viewer inspired by Microsofts ['3D Viewer'](https://apps
 
 ## Media
 
+![Flight Helmet opened in the tool as of the 8th of January, 2023](https://github.com/samoatesgames/Open3DViewer/raw/54c4efa25874a172b083df1915cf29f2f23e490e/media/08-01-2023_MainWindow_FlightHelmet.png)
+
 ![Sponza opened in the tool as of the 3rd of January, 2023](https://github.com/samoatesgames/Open3DViewer/raw/54c4efa25874a172b083df1915cf29f2f23e490e/media/03-01-2023_MainWindow_Sponza.png)
 
 ## Features
