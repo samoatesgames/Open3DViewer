@@ -239,22 +239,22 @@ void main()
 	else if (ShadingMode == 3)
     {
         // [Debug] Draw Metallic Map Only
-        result = (final - final) + vec3(0, 0, metalness);
+        result = (final - final) + vec3(metalness, metalness, metalness);
     }
 	else if (ShadingMode == 4)
     {
         // [Debug] Draw Roughness Map Only
-        result = (final - final) + vec3(0, roughness, 0);
+        result = (final - final) + vec3(roughness, roughness, roughness);
     }
 	else if (ShadingMode == 5)
     {
-        // [Debug] Draw Emmisive Map Only
-        result = (final - final) + emissive;
+        // [Debug] Draw Occlusion Map Only
+        result = (final - final) + occlision;
     }
 	else if (ShadingMode == 6)
     {
-        // [Debug] Draw Occlusion Map Only
-        result = (final - final) + occlision;
+        // [Debug] Draw Emmisive Map Only
+        result = (final - final) + emissive;
     }
     else if (ShadingMode == 7)
     {
@@ -263,7 +263,7 @@ void main()
     }
     else if (ShadingMode == 8)
     {
-        // [Debug] Specular only
+        // [Debug] Ambient only
         result = (final - final) + ambientLighting;
     }
     else if (ShadingMode == 9)
@@ -285,6 +285,11 @@ void main()
     {
         // [Debug] Vertex TexCoords
         result = (final - final) + vec3(vin.texcoord, 0);
+    }
+	else if (ShadingMode == 13)
+    {
+        // [Debug] Vertex Position
+        result = (final - final) + vin.position;
     }
 
     fsout_color = vec4(result, 1);

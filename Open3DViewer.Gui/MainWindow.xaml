@@ -254,33 +254,45 @@
 
                     <!-- Stats & Shading -->
                     <Grid Grid.Row="1" Visibility="{Binding Tabs.ActiveTab, Converter={StaticResource Converter.ActiveTabToVisibility}, ConverterParameter=StatsAndShading, Mode=OneWay}">
-                        <StackPanel>
-                            <Border Margin="0,2,0,0"
-                                    BorderThickness="0,0,0,2"
-                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
-                                <TextBlock Margin="2"
-                                           FontWeight="Normal" FontSize="26" 
-                                           Text="Stats &amp; Shading" />
-                            </Border>
+                        <ScrollViewer>
+                            <StackPanel>
+                                <Border Margin="0,2,0,0"
+                                        BorderThickness="0,0,0,2"
+                                        BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                    <TextBlock Margin="2"
+                                               FontWeight="Normal" FontSize="26" 
+                                               Text="Stats &amp; Shading" />
+                                </Border>
 
-                            <Border Margin="0,2,0,0"
-                                    BorderThickness="0,0,0,2"
-                                    BorderBrush="{StaticResource TextFillColorDisabledBrush}">
-                                <TextBlock Margin="2"
-                                           FontWeight="Normal" FontSize="18" 
-                                           Text="Shading Mode" />
-                            </Border>
+                                <Border Margin="0,2,0,0"
+                                        BorderThickness="0,0,0,2"
+                                        BorderBrush="{StaticResource TextFillColorDisabledBrush}">
+                                    <TextBlock Margin="2"
+                                               FontWeight="Normal" FontSize="18" 
+                                               Text="Shading Mode" />
+                                </Border>
 
-                            <ItemsControl ItemsSource="{Binding Tabs.SupportedRenderModes}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <RadioButton GroupName="ShadingModeGroup" 
-                                                     Content="{Binding DisplayName}" 
-                                                     IsChecked="{Binding IsActive}" />
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
+                                <ItemsControl ItemsSource="{Binding Tabs.SupportedRenderModes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <RadioButton GroupName="ShadingModeGroup" 
+                                                         Content="{Binding DisplayName}" 
+                                                         IsChecked="{Binding IsActive}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                    <ItemsControl.GroupStyle>
+                                        <GroupStyle>
+                                            <GroupStyle.HeaderTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontWeight="Bold" FontSize="15"
+                                                               Text="{Binding Name}"/>
+                                                </DataTemplate>
+                                            </GroupStyle.HeaderTemplate>
+                                        </GroupStyle>
+                                    </ItemsControl.GroupStyle>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
                     <!-- Grid & Views -->

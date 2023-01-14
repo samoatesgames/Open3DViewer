@@ -282,6 +282,7 @@
     <Compile Include="PBRRenderEngine\Types\TextureResourceManager.cs" />
     <Compile Include="PBRRenderEngine\Types\TextureSamplerIndex.cs" />
     <Compile Include="PBRRenderEngine\Types\ViewProjectionInfo.cs" />
+    <Compile Include="Utilities\EnumHelper.cs" />
     <Compile Include="ViewModel\ApplicationCommands.cs" />
     <Compile Include="ViewModel\ApplicationTabsViewModel.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
