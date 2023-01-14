@@ -70,13 +70,13 @@ namespace Open3DViewer.Gui.ViewModel
         {
             get
             {
-                var color = m_engine.SceneInfo.DirectionalLightColor;
+                var color = m_engine.SceneInfo.Lights[0].Radiance;
                 return Color.FromScRgb(1.0f, color.X, color.Y, color.Z);
             }
             set
             {
                 var color = new Vector3(value.ScR, value.ScG, value.ScB);
-                if (m_engine.SceneInfo.DirectionalLightColor != color)
+                if (m_engine.SceneInfo.Lights[0].Radiance != color)
                 {
                     m_engine.SetDirectionalLightColor(color);
                     OnPropertyChanged();

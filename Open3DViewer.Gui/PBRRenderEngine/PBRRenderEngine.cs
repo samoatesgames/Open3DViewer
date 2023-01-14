@@ -1,14 +1,13 @@
 ﻿using Open3DViewer.Gui.PBRRenderEngine.Camera;
 using Open3DViewer.Gui.PBRRenderEngine.GLTF;
+using Open3DViewer.Gui.PBRRenderEngine.Meshes;
 using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Open3DViewer.RenderViewControl;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Open3DViewer.Gui.PBRRenderEngine.Meshes;
 using Veldrid;
 using Vortice.Mathematics;
 
@@ -65,7 +64,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
             RecreateGrid();
 
-            var bufferDescription = new BufferDescription((uint)Marshal.SizeOf<SceneInfo>(), BufferUsage.UniformBuffer | BufferUsage.Dynamic);
+            var bufferDescription = new BufferDescription(SceneInfo.ClassSize, BufferUsage.UniformBuffer | BufferUsage.Dynamic);
             m_sceneInfoBuffer = ResourceFactory.CreateBuffer(bufferDescription);
             m_sceneInfoBuffer.Name = "SceneInfo_Buffer";
 
@@ -92,7 +91,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_camera.GenerateCommands(commandList);
 
             m_sceneInfo.CameraPosition = m_camera.Position;
-            commandList.UpdateBuffer(m_sceneInfoBuffer, 0, ref m_sceneInfo);
+            commandList.UpdateBuffer(m_sceneInfoBuffer, 0, m_sceneInfo.ToSpan());
 
             if (m_gridVisible)
             {
@@ -159,7 +158,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         public void SetDirectionalLightColor(Vector3 color)
         {
-            m_sceneInfo.DirectionalLightColor = color;
+            m_sceneInfo.Lights[0].Radiance = color;
         }
 
         public async Task<bool> TryLoadAssetAsync(string assetPath)

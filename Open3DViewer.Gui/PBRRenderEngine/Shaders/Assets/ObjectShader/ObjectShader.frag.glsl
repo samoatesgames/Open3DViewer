@@ -4,7 +4,7 @@
 
 const float PI = 3.141592;
 const float Epsilon = 0.00001;
-const int NumLights = 1;
+const int NumLights = 3;
 const vec3 Fdielectric = vec3(0.025);
 
 const uint IsDiffuseTextureBound = 1;
@@ -13,16 +13,21 @@ const uint IsMetallicRoughnessTextureBound = 4;
 const uint IsEmissiveTextureBound = 8;
 const uint IsOcclusionTextureBound = 16;
 
+struct DirectionalLight
+{
+	vec3 direction;
+	float padding_direction;
+
+	vec3 radiance;
+	float padding_radiance;
+};
+
 layout(set = 2, binding = 0) uniform SceneInfo
 {
+	DirectionalLight Lights[NumLights];
+
     vec3 AmbientLightColor;
     float padding0;
-
-    vec3 DirectionalLightDirection;
-    float padding1;
-
-    vec3 DirectionalLightColor;
-    float padding2;
 
     vec3 CameraPosition;
     float padding3;
@@ -155,8 +160,8 @@ void main()
 	vec3 directLighting = vec3(0);
 	for(int i=0; i<NumLights; ++i)
 	{
-		vec3 Li = DirectionalLightDirection;
-		vec3 Lradiance = DirectionalLightColor;
+		vec3 Li = Lights[i].direction;
+		vec3 Lradiance = Lights[i].radiance;
 
 		// Half-vector between Li and Lo.
 		vec3 Lh = normalize(Li + Lo);
