@@ -24,6 +24,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         private bool m_gridVisible;
         private GridMesh m_grid;
         private PerspectiveCamera m_camera;
+        private bool m_isAssetLoading;
 
         private readonly long m_fixedUpdateTickCount = TimeSpan.FromMilliseconds(50).Ticks;
         private long m_lastUpdate;
@@ -31,6 +32,16 @@ namespace Open3DViewer.Gui.PBRRenderEngine
         private GLTFEntity m_entity;
         public GLTFScene ActiveScene => m_entity?.Scene;
         public bool IsGridVisible => m_gridVisible;
+
+        public bool IsAssetLoading
+        {
+            get => m_isAssetLoading;
+            private set
+            {
+                m_isAssetLoading = value;
+                OnAssetLoadingChanged?.Invoke(this, value);
+            }
+        }
 
         public TextureResourceManager TextureResourceManager { get; private set; }
         public ShaderResourceManager ShaderResourceManager { get; private set; }
@@ -50,6 +61,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         public delegate void RenderEngineGridVisibilityChanged(PBRRenderEngine engine, bool isVisible);
         public event RenderEngineGridVisibilityChanged OnGridVisibilityChanged;
+
+        public delegate void RenderEngineAssetLoadingChanged(PBRRenderEngine engine, bool isLoading);
+        public event RenderEngineAssetLoadingChanged OnAssetLoadingChanged;
 
         public void Initialize(GraphicsDevice graphicsDevice, ResourceFactory factory, Swapchain swapchain)
         {
@@ -163,6 +177,8 @@ namespace Open3DViewer.Gui.PBRRenderEngine
 
         public async Task<bool> TryLoadAssetAsync(string assetPath)
         {
+            IsAssetLoading = true;
+
             if (m_entity != null)
             {
                 m_camera.LookAt(null);
@@ -177,12 +193,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             if (gltfScene == null)
             {
                 RecreateGrid();
+                IsAssetLoading = false;
                 return false;
             }
 
             m_entity = new GLTFEntity(gltfScene);
             m_camera.LookAt(m_entity);
             RecreateGrid(m_entity.GetBoundingBox());
+            IsAssetLoading = false;
             return true;
         }
 

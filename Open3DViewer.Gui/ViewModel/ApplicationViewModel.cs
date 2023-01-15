@@ -17,11 +17,14 @@ namespace Open3DViewer.Gui.ViewModel
             set => m_engine.SetGridVisible(value);
         }
 
+        public bool ShowRenderView => !m_engine.IsAssetLoading;
+
         public ApplicationViewModel(PBRRenderEngine.PBRRenderEngine renderEngine, RenderViewControl.RenderViewControl renderViewControl)
         {
             m_engine = renderEngine;
             m_engine.OnInitialized += RenderEngineOnOnInitialized;
             m_engine.OnGridVisibilityChanged += RenderEngineOnOnGridVisibilityChanged;
+            m_engine.OnAssetLoadingChanged += RenderEngineAssetLoadingChanged;
 
             Tabs = new ApplicationTabsViewModel(renderEngine);
             Commands = new ApplicationCommands(renderEngine, renderViewControl, Tabs);
@@ -46,6 +49,11 @@ namespace Open3DViewer.Gui.ViewModel
         private void RenderEngineOnOnGridVisibilityChanged(PBRRenderEngine.PBRRenderEngine engine, bool visible)
         {
             OnPropertyChanged(nameof(IsGridEnabled));
+        }
+
+        private void RenderEngineAssetLoadingChanged(PBRRenderEngine.PBRRenderEngine engine, bool isLoading)
+        {
+            OnPropertyChanged(nameof(ShowRenderView));
         }
     }
 }

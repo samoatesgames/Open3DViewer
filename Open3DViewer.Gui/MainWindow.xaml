@@ -191,7 +191,27 @@
             
             <!-- Render View -->
             <Grid Grid.Column="0">
-                <renderViewControl:RenderViewControl x:Name="RenderView" />
+                <renderViewControl:RenderViewControl x:Name="RenderView" Visibility="{Binding ShowRenderView, Converter={StaticResource Converter.BoolToVisibility}}" />
+
+                <!-- Loading Asset View -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:ProgressRing Grid.Column="1" Grid.Row="1" IsIndeterminate="True" />
+                    <TextBlock Grid.Column="1" Grid.Row="2" Margin="0,8" Text="Loading..." />
+
+                </Grid>
             </Grid>
 
             <!-- Control Tabs -->
