@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Open3DViewer.PBRRenderer.Camera;
+﻿using Open3DViewer.PBRRenderer.Camera;
 using Open3DViewer.PBRRenderer.GLTF;
 using Open3DViewer.PBRRenderer.Meshes;
 using Open3DViewer.PBRRenderer.Types;
 using Open3DViewer.RenderViewControl;
+using Open3DViewer.RenderViewControl.Types;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Threading.Tasks;
 using Veldrid;
 using Vortice.Mathematics;
 
@@ -120,39 +120,39 @@ namespace Open3DViewer.PBRRenderer
             m_camera.OnSwapchainResized(width, height);
         }
 
-        public void OnMouseDown(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        public void OnMouseDown(MouseButtonInfo args)
         {
-            m_camera.OnMouseDown(control, args);
+            m_camera.OnMouseDown(args);
         }
 
-        public void OnMouseUp(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        public void OnMouseUp(MouseButtonInfo args)
         {
-            m_camera.OnMouseUp(control, args);
+            m_camera.OnMouseUp(args);
         }
 
-        public void OnMouseMove(RenderViewControl.RenderViewControl control, MouseEventArgs args)
+        public void OnMouseMove(MouseMoveInfo args)
         {
-            m_camera.OnMouseMove(control, args);
+            m_camera.OnMouseMove(args);
         }
 
-        public void OnMouseWheel(RenderViewControl.RenderViewControl sender, MouseWheelEventArgs args)
+        public void OnMouseWheel(MouseWheelInfo args)
         {
-            m_camera.OnMouseWheel(sender, args);
+            m_camera.OnMouseWheel(args);
         }
 
-        public void OnKeyDown(RenderViewControl.RenderViewControl control, KeyEventArgs args)
+        public void OnKeyDown(KeyPressInfo args)
         {
-            m_camera.OnKeyDown(control, args);
+            m_camera.OnKeyDown(args);
 
-            if (args.Key == Key.G)
+            if (args.Key == 'g')
             {
                 SetGridVisible(!m_gridVisible);
             }
         }
 
-        public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
+        public void OnKeyUp(KeyPressInfo args)
         {
-            m_camera.OnKeyUp(control, args);
+            m_camera.OnKeyUp(args);
         }
 
         public void RegisterSharedResource(CoreSharedResource resourceType, BindableResource resource)

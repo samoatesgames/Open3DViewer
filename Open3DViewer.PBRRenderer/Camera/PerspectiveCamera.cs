@@ -1,9 +1,8 @@
-﻿using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Windows;
-using System.Windows.Input;
-using Open3DViewer.PBRRenderer.GLTF;
+﻿using Open3DViewer.PBRRenderer.GLTF;
 using Open3DViewer.PBRRenderer.Types;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using Open3DViewer.RenderViewControl.Types;
 using Veldrid;
 
 namespace Open3DViewer.PBRRenderer.Camera
@@ -25,7 +24,7 @@ namespace Open3DViewer.PBRRenderer.Camera
         private float m_entitySize;
 
         private MouseMoveMode m_mouseMoveMode = MouseMoveMode.None;
-        private Point m_mouseStartPosition;
+        private Vector2 m_mouseStartPosition;
         private float m_yawRotation;
         private float m_pitchRotation;
         private float m_zoomAmount;
@@ -54,35 +53,36 @@ namespace Open3DViewer.PBRRenderer.Camera
                 1000f);
         }
 
-        public void OnMouseDown(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        public void OnMouseDown(MouseButtonInfo args)
         {
-            m_mouseMoveMode = args.ChangedButton == MouseButton.Left
+            m_mouseMoveMode = args.PressedButton == PressedMouseButton.Left
                 ? MouseMoveMode.Orbit
                 : MouseMoveMode.Pan;
-            m_mouseStartPosition = args.GetPosition(control);
+
+            m_mouseStartPosition = args.Position;
         }
 
-        public void OnMouseUp(RenderViewControl.RenderViewControl control, MouseButtonEventArgs args)
+        public void OnMouseUp(MouseButtonInfo args)
         {
             m_mouseMoveMode = MouseMoveMode.None;
         }
 
-        public void OnMouseMove(RenderViewControl.RenderViewControl control, MouseEventArgs args)
+        public void OnMouseMove(MouseMoveInfo args)
         {
             if (m_mouseMoveMode == MouseMoveMode.None)
             {
                 return;
             }
 
-            var currentMousePosition = args.GetPosition(control);
+            var currentMousePosition = args.Position;
             var moveAmount = currentMousePosition - m_mouseStartPosition;
             m_mouseStartPosition = currentMousePosition;
 
             switch (m_mouseMoveMode)
             {
                 case MouseMoveMode.Orbit:
-                    m_yawRotation -= (float)moveAmount.X * 0.01f;
-                    m_pitchRotation += (float)moveAmount.Y * 0.01f;
+                    m_yawRotation -= moveAmount.X * 0.01f;
+                    m_pitchRotation += moveAmount.Y * 0.01f;
                     break;
                 case MouseMoveMode.Pan:
                     // TODO: Support pan movement
@@ -90,36 +90,40 @@ namespace Open3DViewer.PBRRenderer.Camera
             }
         }
 
-        public void OnMouseWheel(RenderViewControl.RenderViewControl sender, MouseWheelEventArgs args)
+        public void OnMouseWheel(MouseWheelInfo args)
         {
             if (m_lookAtEntity == null)
             {
                 return;
             }
 
-            var delta = args.Delta * 0.001f;
+            var delta = args.WheelAmount * 0.001f;
             m_zoomDelta += (m_entitySize * delta);
         }
 
-        public void OnKeyDown(RenderViewControl.RenderViewControl control, KeyEventArgs args)
+        public void OnKeyDown(KeyPressInfo args)
         {
             if (m_lookAtEntity == null)
             {
                 return;
             }
 
-            if (args.Key == Key.OemPlus || args.Key == Key.Add)
+            if (args.Key == '+')
             {
                 ZoomIn();
             }
-            else if (args.Key == Key.OemMinus || args.Key == Key.Subtract)
+            else if (args.Key == '-')
             {
                 ZoomOut();
             }
-            else if (args.Key == Key.Home)
+            else if (args.Key == KeyPressInfo.KeyHome)
             {
                 ResetCamera();
             }
+        }
+
+        public void OnKeyUp(KeyPressInfo args)
+        {
         }
 
         public void ZoomIn()
@@ -130,10 +134,6 @@ namespace Open3DViewer.PBRRenderer.Camera
         public void ZoomOut()
         {
             m_zoomDelta += (m_entitySize * 0.01f);
-        }
-
-        public void OnKeyUp(RenderViewControl.RenderViewControl control, KeyEventArgs args)
-        {
         }
 
         public void FixedUpdate()

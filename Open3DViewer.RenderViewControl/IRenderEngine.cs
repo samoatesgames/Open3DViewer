@@ -1,5 +1,5 @@
-﻿using System;
-using System.Windows.Input;
+﻿using Open3DViewer.RenderViewControl.Types;
+using System;
 using Veldrid;
 
 namespace Open3DViewer.RenderViewControl
@@ -18,12 +18,12 @@ namespace Open3DViewer.RenderViewControl
 
         void OnSwapchainResized(uint width, uint height);
 
-        void OnMouseDown(RenderViewControl control, MouseButtonEventArgs args);
-        void OnMouseUp(RenderViewControl control, MouseButtonEventArgs args);
-        void OnMouseMove(RenderViewControl control, MouseEventArgs args);
-        void OnMouseWheel(RenderViewControl sender, MouseWheelEventArgs args);
+        void OnMouseDown(MouseButtonInfo args);
+        void OnMouseUp(MouseButtonInfo args);
+        void OnMouseMove(MouseMoveInfo args);
+        void OnMouseWheel(MouseWheelInfo args);
 
-        void OnKeyDown(RenderViewControl control, KeyEventArgs args);
-        void OnKeyUp(RenderViewControl control, KeyEventArgs args);
+        void OnKeyDown(KeyPressInfo args);
+        void OnKeyUp(KeyPressInfo args);
     }
 }

@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Open3DViewer.RenderViewControl.Types;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Veldrid;
 using Window = System.Windows.Window;
@@ -43,45 +46,97 @@ namespace Open3DViewer.RenderViewControl
                 if (sender is RenderViewControl renderView)
                 {
                     renderView.CaptureMouse();
-                    RenderEngine?.OnMouseDown(renderView, args);
+                    RenderEngine?.OnMouseDown(CreateMouseButtonInfo(renderView, args));
                 }
             };
             MouseUp += (sender, args) =>
             {
                 if (sender is RenderViewControl renderView)
                 {
-                    RenderEngine?.OnMouseUp(renderView, args);
+                    RenderEngine?.OnMouseUp(CreateMouseButtonInfo(renderView, args));
                     renderView.ReleaseMouseCapture();
                 }
             };
             MouseMove += (sender, args) =>
             {
-                RenderEngine?.OnMouseMove(sender as RenderViewControl, args);
+                if (sender is RenderViewControl renderView)
+                {
+                    RenderEngine?.OnMouseMove(CreateMouseMoveInfo(renderView, args));
+                }
             };
             MouseWheel += (sender, args) =>
             {
-                RenderEngine?.OnMouseWheel(sender as RenderViewControl, args);
+                if (sender is RenderViewControl)
+                {
+                    RenderEngine?.OnMouseWheel(CreateMouseWheelInfo(args));
+                }
             };
 
             var window = Window.GetWindow(this);
             if (window != null)
             {
-                var control = this;
                 window.KeyDown += (sender, args) =>
                 {
                     if (IsMouseOverControl())
                     {
-                        RenderEngine?.OnKeyDown(control, args);
+                        RenderEngine?.OnKeyDown(CreateKeyPressInfo(args));
                     }
                 };
                 window.KeyUp += (sender, args) =>
                 {
                     if (IsMouseOverControl())
                     {
-                        RenderEngine?.OnKeyUp(control, args);
+                        RenderEngine?.OnKeyUp(CreateKeyPressInfo(args));
                     }
                 };
             }
+        }
+        
+        private KeyPressInfo CreateKeyPressInfo(KeyEventArgs args)
+        {
+            var offset = args.Key - Key.A;
+            if (offset >= 0 && offset <= (Key.Z - Key.A))
+            {
+                var alphaKey = (char)('a' + offset);
+                return new KeyPressInfo(alphaKey);
+            }
+
+            offset = args.Key - Key.D0;
+            if (offset >= 0 && offset <= (Key.D9 - Key.D0))
+            {
+                var numericKey = (char)('0' + offset);
+                return new KeyPressInfo(numericKey);
+            }
+
+            if (KeyPressInfo.KeyMap.TryGetValue(args.Key, out var mappedKey))
+            {
+                return new KeyPressInfo(mappedKey);
+            }
+            
+            return new KeyPressInfo('\0');
+        }
+
+        private MouseWheelInfo CreateMouseWheelInfo(MouseWheelEventArgs args)
+        {
+            return new MouseWheelInfo(args.Delta);
+        }
+
+        private MouseMoveInfo CreateMouseMoveInfo(RenderViewControl renderView, MouseEventArgs args)
+        {
+            var position = args.GetPosition(renderView);
+            return new MouseMoveInfo(new Vector2((float)position.X, (float)position.Y));
+        }
+
+        private MouseButtonInfo CreateMouseButtonInfo(RenderViewControl renderView, MouseButtonEventArgs args)
+        {
+            var pressedButton = args.ChangedButton == MouseButton.Left
+                ? PressedMouseButton.Left 
+                : args.ChangedButton == MouseButton.Right 
+                    ? PressedMouseButton.Right
+                    : PressedMouseButton.Middle;
+
+            var position = args.GetPosition(renderView);
+            return new MouseButtonInfo(pressedButton, new Vector2((float)position.X, (float)position.Y));
         }
 
         protected override void Uninitialize()
