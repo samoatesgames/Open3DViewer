@@ -23,3 +23,7 @@ An open source 3D model viewer inspired by Microsofts ['3D Viewer'](https://apps
  * Skybox support.
  * Animation support.
  * Support for more than just GLTF models.
+
+## Thanks
+
+[Object icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/object "object icons")

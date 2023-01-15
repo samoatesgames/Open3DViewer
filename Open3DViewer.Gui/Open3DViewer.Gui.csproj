@@ -45,6 +45,9 @@
   <PropertyGroup>
     <StartupObject>Open3DViewer.Gui.App</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\open3dviewer.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ColorPicker, Version=3.3.1.0, Culture=neutral, PublicKeyToken=1c61eec504ce2276, processorArchitecture=MSIL">
       <HintPath>..\packages\PixiEditor.ColorPicker.3.3.1\lib\net451\ColorPicker.dll</HintPath>
@@ -329,6 +332,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\open3dviewer.ico" />
+    <Resource Include="Resources\open3dviewer.png" />
     <None Include="App.config" />
     <Content Include="Assets\Axes\Axes.glb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
