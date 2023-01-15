@@ -271,6 +271,8 @@
     </ApplicationDefinition>
     <Compile Include="Converter\ActiveApplicationTabToBoolConverter.cs" />
     <Compile Include="Converter\ActiveApplicationTabToVisibilityConverter.cs" />
+    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converter\ColorToSolidBrushConverter.cs" />
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
     <Compile Include="PBRRenderEngine\Buffers\Vertex\GridVertexLayout.cs" />
     <Compile Include="PBRRenderEngine\Meshes\GridMesh.cs" />
@@ -286,6 +288,7 @@
     <Compile Include="ViewModel\ApplicationCommands.cs" />
     <Compile Include="ViewModel\ApplicationTabsViewModel.cs" />
     <Compile Include="ViewModel\ApplicationViewModel.cs" />
+    <Compile Include="ViewModel\DirectionaLightViewModel.cs" />
     <Compile Include="ViewModel\RecentFileViewModel.cs" />
     <Compile Include="ViewModel\ShadingModeViewModel.cs" />
     <Page Include="MainWindow.xaml">

@@ -81,18 +81,18 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
             {
                 new DirectionalLight
                 {
-                    Direction = Vector3.Normalize(new Vector3(-1.0f,  0.0f, 0.0f)),
-                    Radiance = Vector3.One
+                    Direction = Vector3.Normalize(new Vector3(0.0f,  0.4f, 1.0f)),
+                    Radiance = Vector3.One * 0.5f
                 },
                 new DirectionalLight
                 {
-                    Direction = Vector3.Normalize(new Vector3(1.0f,  0.0f, 0.0f)),
-                    Radiance = Vector3.One
+                    Direction = Vector3.Normalize(new Vector3(-0.8f,  0.4f, -0.2f)),
+                    Radiance = Vector3.One * 0.5f
                 },
                 new DirectionalLight
                 {
-                    Direction = Vector3.Normalize(new Vector3(0.0f, -1.0f, 0.0f)),
-                    Radiance = Vector3.One
+                    Direction = Vector3.Normalize(new Vector3(0.8f, 0.4f, -0.2f)),
+                    Radiance = Vector3.One * 0.5f
                 }
             };
 

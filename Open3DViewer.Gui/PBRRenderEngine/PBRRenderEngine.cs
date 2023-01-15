@@ -156,9 +156,9 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_sceneInfo.AmbientLightColor = color;
         }
 
-        public void SetDirectionalLightColor(Vector3 color)
+        public void SetDirectionalLightColor(int lightIndex, Vector3 color)
         {
-            m_sceneInfo.Lights[0].Radiance = color;
+            m_sceneInfo.Lights[lightIndex].Radiance = color;
         }
 
         public async Task<bool> TryLoadAssetAsync(string assetPath)

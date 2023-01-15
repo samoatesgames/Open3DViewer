@@ -20,6 +20,8 @@
             <converter:DoesCollectionContainItemsConverter x:Key="Converter.DoesCollectionContainItems" />
             <converter:ActiveApplicationTabToBoolConverter x:Key="Converter.ActiveTabToBool" />
             <converter:ActiveApplicationTabToVisibilityConverter x:Key="Converter.ActiveTabToVisibility" />
+            <converter:ColorToSolidBrushConverter x:Key="Converter.ColorToSolidBrush" />
+            <converter:BoolToVisibilityConverter x:Key="Converter.BoolToVisibility" />
 
             <Style x:Key="Style.Path.Icon" TargetType="{x:Type Path}">
                 <Setter Property="Fill" Value="{StaticResource TextFillColorPrimaryBrush}" />
@@ -236,18 +238,40 @@
                                 </Border>
 
                                 <ui:CardExpander Header="Ambient Light" Margin="0,2">
-                                    <colorpicker:ColorSliders Style="{StaticResource DefaultColorPickerStyle}" 
+                                    <colorpicker:SquarePicker Style="{StaticResource DefaultColorPickerStyle}" 
                                                               SelectedColor="{Binding Tabs.AmbientLightColor, Mode=TwoWay}"
-                                                              ShowAlpha="False"
-                                                              />
+                                    />
                                 </ui:CardExpander>
 
-                                <ui:CardExpander Header="Directional Light" Margin="0,2">
-                                    <colorpicker:ColorSliders Style="{StaticResource DefaultColorPickerStyle}" 
-                                                              SelectedColor="{Binding Tabs.DirectionalLightColor, Mode=TwoWay}"
-                                                              ShowAlpha="False"
-                                                              />
-                                </ui:CardExpander>
+                                <ItemsControl ItemsSource="{Binding Tabs.DirectionalLights}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ui:CardExpander Margin="0,2">
+                                                <ui:CardExpander.Header>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="8" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <ui:ToggleSwitch Grid.Column="0" IsChecked="{Binding IsActive}" />
+                                                        <TextBlock Grid.Column="1" Margin="8,0" Text="{Binding LightName}" />
+                                                        <Ellipse Grid.Column="2" Height="20" Width="20"
+                                                                 Visibility="{Binding IsActive, Mode=OneWay, Converter={StaticResource Converter.BoolToVisibility}}"
+                                                                 Fill="{Binding LightColor, Mode=OneWay, Converter={StaticResource Converter.ColorToSolidBrush}}" />
+                                                    </Grid>
+                                                </ui:CardExpander.Header>
+                                                <colorpicker:SquarePicker Style="{StaticResource DefaultColorPickerStyle}" 
+                                                                          SelectedColor="{Binding LightColor, Mode=TwoWay}"
+                                                                          IsEnabled="{Binding IsActive}"
+                                                />
+                                            </ui:CardExpander>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
