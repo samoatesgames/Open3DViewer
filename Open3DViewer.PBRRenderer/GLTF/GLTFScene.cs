@@ -1,15 +1,15 @@
-﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
-using SharpGLTF.Schema2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using Open3DViewer.PBRRenderer.Buffers.Vertex;
+using SharpGLTF.Schema2;
 using Veldrid;
 using Vortice.Mathematics;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
+namespace Open3DViewer.PBRRenderer.GLTF
 {
     public class GLTFScene : IDisposable
     {

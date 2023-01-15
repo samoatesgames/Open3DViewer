@@ -1,12 +1,12 @@
-﻿using Open3DViewer.Gui.PBRRenderEngine.GLTF;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using Open3DViewer.PBRRenderer.GLTF;
+using Open3DViewer.PBRRenderer.Types;
 using Veldrid;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Camera
+namespace Open3DViewer.PBRRenderer.Camera
 {
     public class PerspectiveCamera
     {

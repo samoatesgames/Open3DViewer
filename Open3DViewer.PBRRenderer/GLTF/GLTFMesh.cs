@@ -1,17 +1,17 @@
-﻿using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
-using Open3DViewer.Gui.PBRRenderEngine.Shaders;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
-using SharpGLTF.Schema2;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Open3DViewer.PBRRenderer.Buffers.Vertex;
+using Open3DViewer.PBRRenderer.Shaders;
+using Open3DViewer.PBRRenderer.Types;
+using SharpGLTF.Schema2;
 using Veldrid;
 using Vortice.Mathematics;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
+namespace Open3DViewer.PBRRenderer.GLTF
 {
     public class GLTFMesh : IDisposable
     {

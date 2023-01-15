@@ -6,7 +6,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Types
+namespace Open3DViewer.PBRRenderer.Types
 {
     public class TextureResourceManager : IDisposable
     {
@@ -104,14 +104,14 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         private void LoadFallbackTextures()
         {
-            using (var stream = new FileStream("Assets/Fallback Assets/DefaultDiffuseMap.png", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(@"Assets\PBRRenderer\FallbackAssets\DefaultDiffuseMap.png", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var defaultTextureView = LoadTexture(stream);
                 defaultTextureView.Name = $"DefaultTextureView_{TextureSamplerIndex.Diffuse}";
                 m_fallbackTextureViews[TextureSamplerIndex.Diffuse] = defaultTextureView;
             }
 
-            using (var stream = new FileStream("Assets/Fallback Assets/DefaultNormalMap.png", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var stream = new FileStream(@"Assets\PBRRenderer\FallbackAssets\DefaultNormalMap.png", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 var defaultTextureView = LoadTexture(stream);
                 defaultTextureView.Name = $"DefaultTextureView_{TextureSamplerIndex.Normal}";

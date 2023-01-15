@@ -1,12 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
 using Open3DViewer.Gui.Utilities;
+using Open3DViewer.PBRRenderer;
+using Open3DViewer.PBRRenderer.Types;
 
 namespace Open3DViewer.Gui.ViewModel
 {
     public class ShadingModeViewModel : ObservableObject
     {
-        private readonly PBRRenderEngine.PBRRenderEngine m_engine;
+        private readonly PBRRenderEngine m_engine;
 
         public ShadingModes ShadingMode { get; }
         public string Group { get; }
@@ -25,7 +26,7 @@ namespace Open3DViewer.Gui.ViewModel
             }
         }
 
-        public ShadingModeViewModel(PBRRenderEngine.PBRRenderEngine engine, ShadingModes shadingMode)
+        public ShadingModeViewModel(PBRRenderEngine engine, ShadingModes shadingMode)
         {
             m_engine = engine;
             ShadingMode = shadingMode;

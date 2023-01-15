@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex;
-using Open3DViewer.Gui.PBRRenderEngine.Shaders;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
+using Open3DViewer.PBRRenderer.Buffers.Vertex;
+using Open3DViewer.PBRRenderer.Shaders;
+using Open3DViewer.PBRRenderer.Types;
 using Veldrid;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Meshes
+namespace Open3DViewer.PBRRenderer.Meshes
 {
     public class GridMesh : IDisposable
     {

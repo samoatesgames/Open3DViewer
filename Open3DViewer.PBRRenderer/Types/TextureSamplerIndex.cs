@@ -1,4 +1,4 @@
-﻿namespace Open3DViewer.Gui.PBRRenderEngine.Types
+﻿namespace Open3DViewer.PBRRenderer.Types
 {
     public enum TextureSamplerIndex : uint
     {

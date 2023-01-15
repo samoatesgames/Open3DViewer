@@ -2,25 +2,25 @@
 using System.Runtime.CompilerServices;
 using Veldrid;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Shaders
+namespace Open3DViewer.PBRRenderer.Shaders
 {
     public class ObjectShader : IRenderShader
     {
         public string GetVertexShaderPath()
         {
 #if DEBUG
-            return $@"{GetProjectDirectory()}\Assets\ObjectShader\ObjectShader.vert.glsl";
+            return $@"{GetProjectDirectory()}\..\Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.vert.glsl";
 #else
-            return @"PBRRenderEngine\Shaders\Assets\ObjectShader\ObjectShader.vert.glsl";
+            return @"Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.vert.glsl";
 #endif
         }
 
         public string GetPixelShaderPath()
         {
 #if DEBUG
-            return $@"{GetProjectDirectory()}\Assets\ObjectShader\ObjectShader.frag.glsl";
+            return $@"{GetProjectDirectory()}\..\Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.frag.glsl";
 #else
-            return @"PBRRenderEngine\Shaders\Assets\ObjectShader\ObjectShader.frag.glsl";
+            return @"Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.frag.glsl";
 #endif
         }
 

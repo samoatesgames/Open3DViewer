@@ -10,12 +10,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Open3DViewer.PBRRenderer;
 
 namespace Open3DViewer.Gui.ViewModel
 {
     internal class ApplicationCommands : ObservableObject
     {
-        private readonly PBRRenderEngine.PBRRenderEngine m_renderEngine;
+        private readonly PBRRenderEngine m_renderEngine;
         private readonly RenderViewControl.RenderViewControl m_renderViewControl;
         private readonly ICommand m_commandFileRecentOpen;
 
@@ -38,7 +39,7 @@ namespace Open3DViewer.Gui.ViewModel
         public ICommand CommandViewZoomOut { get; }
         public ICommand CommandViewResetCamera { get; }
 
-        public ApplicationCommands(PBRRenderEngine.PBRRenderEngine renderEngine, 
+        public ApplicationCommands(PBRRenderEngine renderEngine, 
             RenderViewControl.RenderViewControl renderViewControl,
             ApplicationTabsViewModel tabsViewModel)
         {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Types
+namespace Open3DViewer.PBRRenderer.Types
 {
     public enum ShadingModes : uint
     {
@@ -9,45 +9,45 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
 
         // Maps
         [ShadingMode("Textures", "Diffuse Map Only")]
-        MapOnly_Diffuse = 1,
+        MapOnlyDiffuse = 1,
 
         [ShadingMode("Textures", "Normal Map Only")]
-        MapOnly_Normal = 2,
+        MapOnlyNormal = 2,
 
         [ShadingMode("Textures", "Metallic Map Only")]
-        MapOnly_Metallic = 3,
+        MapOnlyMetallic = 3,
 
         [ShadingMode("Textures", "Roughness Map Only")]
-        MapOnly_Roughness = 4,
+        MapOnlyRoughness = 4,
 
         [ShadingMode("Textures", "Occlusion Map Only")]
-        MapOnly_Occlusion = 5,
+        MapOnlyOcclusion = 5,
 
         [ShadingMode("Textures", "Emissive Map Only")]
-        MapOnly_Emissive = 6,
+        MapOnlyEmissive = 6,
 
         // Lighting
         [ShadingMode("Lighting", "Direct Lighting Only")]
-        Lighting_Direct = 7,
+        LightingDirect = 7,
 
         [ShadingMode("Lighting", "Ambient Lighting Only")]
-        Lighting_Ambient = 8,
+        LightingAmbient = 8,
 
         // Vertex
         [ShadingMode("Mesh", "Vertex Normals")]
-        Vertex_Normal = 9,
+        VertexNormal = 9,
 
         [ShadingMode("Mesh", "Vertex Tangents")]
-        Vertex_Tangent = 10,
+        VertexTangent = 10,
 
         [ShadingMode("Mesh", "Vertex BiTangents")]
-        Vertex_BiTangent = 11,
+        VertexBiTangent = 11,
 
         [ShadingMode("Mesh", "Vertex Texture Coordinates")]
-        Vertex_TexCoord = 12,
+        VertexTexCoord = 12,
 
         [ShadingMode("Mesh", "Vertex Position")]
-        Vertex_Position = 13,
+        VertexPosition = 13,
     }
 
     [AttributeUsage(AttributeTargets.All)]

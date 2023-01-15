@@ -1,12 +1,12 @@
-﻿using Open3DViewer.Gui.PBRRenderEngine.Shaders;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Open3DViewer.PBRRenderer.Shaders;
 using Veldrid;
 using Veldrid.SPIRV;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Types
+namespace Open3DViewer.PBRRenderer.Types
 {
     public class ShaderResourceManager : IDisposable
     {

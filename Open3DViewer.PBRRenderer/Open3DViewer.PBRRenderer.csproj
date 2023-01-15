@@ -1,30 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Vortice.Direct3D11.2.1.0\build\netstandard2.0\Vortice.Direct3D11.props" Condition="Exists('..\packages\Vortice.Direct3D11.2.1.0\build\netstandard2.0\Vortice.Direct3D11.props')" />
-  <Import Project="..\packages\Vortice.DXGI.2.1.0\build\netstandard2.0\Vortice.DXGI.props" Condition="Exists('..\packages\Vortice.DXGI.2.1.0\build\netstandard2.0\Vortice.DXGI.props')" />
-  <Import Project="..\packages\Vortice.D3DCompiler.2.1.0\build\netstandard2.0\Vortice.D3DCompiler.props" Condition="Exists('..\packages\Vortice.D3DCompiler.2.1.0\build\netstandard2.0\Vortice.D3DCompiler.props')" />
-  <Import Project="..\packages\Vortice.DirectX.2.1.0\build\netstandard2.0\Vortice.DirectX.props" Condition="Exists('..\packages\Vortice.DirectX.2.1.0\build\netstandard2.0\Vortice.DirectX.props')" />
-  <Import Project="..\packages\SharpGen.Runtime.COM.2.0.0-beta.10\build\net45\SharpGen.Runtime.COM.props" Condition="Exists('..\packages\SharpGen.Runtime.COM.2.0.0-beta.10\build\net45\SharpGen.Runtime.COM.props')" />
-  <Import Project="..\packages\SharpGen.Runtime.2.0.0-beta.10\build\SharpGen.Runtime.props" Condition="Exists('..\packages\SharpGen.Runtime.2.0.0-beta.10\build\SharpGen.Runtime.props')" />
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2B11FBFC-E42D-43A6-B80A-39F52D1D69BB}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <RootNamespace>Open3DViewer.Gui</RootNamespace>
-    <AssemblyName>Open3DViewer.Gui</AssemblyName>
+    <ProjectGuid>{167E042E-4232-4A8A-9F3F-F6A6FBA41FAE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Open3DViewer.PBRRenderer</RootNamespace>
+    <AssemblyName>Open3DViewer.PBRRenderer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -34,7 +26,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -42,22 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>Open3DViewer.Gui.App</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>Resources\open3dviewer.ico</ApplicationIcon>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ColorPicker, Version=3.3.1.0, Culture=neutral, PublicKeyToken=1c61eec504ce2276, processorArchitecture=MSIL">
-      <HintPath>..\packages\PixiEditor.ColorPicker.3.3.1\lib\net451\ColorPicker.dll</HintPath>
-    </Reference>
-    <Reference Include="CommunityToolkit.HighPerformance, Version=8.0.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
-      <HintPath>..\packages\CommunityToolkit.HighPerformance.8.0.0\lib\netstandard2.0\CommunityToolkit.HighPerformance.dll</HintPath>
-    </Reference>
-    <Reference Include="CommunityToolkit.Mvvm, Version=8.0.0.0, Culture=neutral, PublicKeyToken=4aff67a105548ee2, processorArchitecture=MSIL">
-      <HintPath>..\packages\CommunityToolkit.Mvvm.8.0.0\lib\netstandard2.0\CommunityToolkit.Mvvm.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -263,99 +239,67 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Wpf.Ui, Version=2.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WPF-UI.2.0.3\lib\net48\Wpf.Ui.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </ApplicationDefinition>
-    <Compile Include="Converter\ActiveApplicationTabToBoolConverter.cs" />
-    <Compile Include="Converter\ActiveApplicationTabToVisibilityConverter.cs" />
-    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
-    <Compile Include="Converter\ColorToSolidBrushConverter.cs" />
-    <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
-    <Compile Include="Utilities\EnumHelper.cs" />
-    <Compile Include="ViewModel\ApplicationCommands.cs" />
-    <Compile Include="ViewModel\ApplicationTabsViewModel.cs" />
-    <Compile Include="ViewModel\ApplicationViewModel.cs" />
-    <Compile Include="ViewModel\DirectionaLightViewModel.cs" />
-    <Compile Include="ViewModel\RecentFileViewModel.cs" />
-    <Compile Include="ViewModel\ShadingModeViewModel.cs" />
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="PBRRenderEngine.cs" />
+    <Compile Include="Buffers\Vertex\GridVertexLayout.cs" />
+    <Compile Include="Meshes\GridMesh.cs" />
+    <Compile Include="Shaders\GridShader.cs" />
+    <Compile Include="Types\MaterialInfo.cs" />
+    <Compile Include="Types\SceneInfo.cs" />
+    <Compile Include="Types\ShaderResourceManager.cs" />
+    <Compile Include="Types\ShadingModes.cs" />
+    <Compile Include="Types\TextureResourceManager.cs" />
+    <Compile Include="Types\TextureSamplerIndex.cs" />
+    <Compile Include="Types\ViewProjectionInfo.cs" />
+    <Compile Include="Buffers\Vertex\IVertexLayout.cs" />
+    <Compile Include="Buffers\Vertex\VertexLayoutFull.cs" />
+    <Compile Include="Camera\PerspectiveCamera.cs" />
+    <Compile Include="GLTF\GLTFEntity.cs" />
+    <Compile Include="GLTF\GLTFScene.cs" />
+    <Compile Include="GLTF\GLTFMesh.cs" />
+    <Compile Include="Shaders\ObjectShader.cs" />
+    <Compile Include="Shaders\IRenderShader.cs" />
+    <Compile Include="Types\CoreSharedResource.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\open3dviewer.ico" />
-    <Resource Include="Resources\open3dviewer.png" />
-    <None Include="App.config" />
-    <Content Include="Assets\Axes\Axes.glb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\Box\Box.glb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Open3DViewer.PBRRenderer\Open3DViewer.PBRRenderer.csproj">
-      <Project>{167e042e-4232-4a8a-9f3f-f6a6fba41fae}</Project>
-      <Name>Open3DViewer.PBRRenderer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Open3DViewer.RenderViewControl\Open3DViewer.RenderViewControl.csproj">
       <Project>{7fbcd810-d997-407a-8192-2321fe6d22a1}</Project>
       <Name>Open3DViewer.RenderViewControl</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\Helmet\Helmet.glb">
+    <None Include="app.config" />
+    <Content Include="Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.frag.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Assets\Lantern\Lantern.glb">
+    <Content Include="Assets\PBRRenderer\Shaders\ObjectShader\ObjectShader.vert.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PBRRenderer\Shaders\GridShader\GridShader.frag.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PBRRenderer\Shaders\GridShader\GridShader.vert.glsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Assets\PBRRenderer\FallbackAssets\DefaultDiffuseMap.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\PBRRenderer\FallbackAssets\DefaultNormalMap.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Veldrid.SPIRV.1.0.15\build\net40\Veldrid.SPIRV.targets" Condition="Exists('..\packages\Veldrid.SPIRV.1.0.15\build\net40\Veldrid.SPIRV.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Veldrid.SPIRV.1.0.15\build\net40\Veldrid.SPIRV.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Veldrid.SPIRV.1.0.15\build\net40\Veldrid.SPIRV.targets'))" />
-    <Error Condition="!Exists('..\packages\SharpGen.Runtime.2.0.0-beta.10\build\SharpGen.Runtime.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SharpGen.Runtime.2.0.0-beta.10\build\SharpGen.Runtime.props'))" />
-    <Error Condition="!Exists('..\packages\SharpGen.Runtime.COM.2.0.0-beta.10\build\net45\SharpGen.Runtime.COM.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SharpGen.Runtime.COM.2.0.0-beta.10\build\net45\SharpGen.Runtime.COM.props'))" />
-    <Error Condition="!Exists('..\packages\Vortice.DirectX.2.1.0\build\netstandard2.0\Vortice.DirectX.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Vortice.DirectX.2.1.0\build\netstandard2.0\Vortice.DirectX.props'))" />
-    <Error Condition="!Exists('..\packages\Vortice.D3DCompiler.2.1.0\build\netstandard2.0\Vortice.D3DCompiler.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Vortice.D3DCompiler.2.1.0\build\netstandard2.0\Vortice.D3DCompiler.props'))" />
-    <Error Condition="!Exists('..\packages\Vortice.DXGI.2.1.0\build\netstandard2.0\Vortice.DXGI.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Vortice.DXGI.2.1.0\build\netstandard2.0\Vortice.DXGI.props'))" />
-    <Error Condition="!Exists('..\packages\Vortice.Direct3D11.2.1.0\build\netstandard2.0\Vortice.Direct3D11.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Vortice.Direct3D11.2.1.0\build\netstandard2.0\Vortice.Direct3D11.props'))" />
-    <Error Condition="!Exists('..\packages\CommunityToolkit.Mvvm.8.0.0\build\netstandard2.0\CommunityToolkit.Mvvm.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\CommunityToolkit.Mvvm.8.0.0\build\netstandard2.0\CommunityToolkit.Mvvm.targets'))" />
   </Target>
-  <Import Project="..\packages\CommunityToolkit.Mvvm.8.0.0\build\netstandard2.0\CommunityToolkit.Mvvm.targets" Condition="Exists('..\packages\CommunityToolkit.Mvvm.8.0.0\build\netstandard2.0\CommunityToolkit.Mvvm.targets')" />
 </Project>

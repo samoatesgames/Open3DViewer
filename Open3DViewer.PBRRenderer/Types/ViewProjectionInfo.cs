@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Types
+namespace Open3DViewer.PBRRenderer.Types
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct ViewProjectionInfo

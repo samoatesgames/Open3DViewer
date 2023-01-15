@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Numerics;
 using System.Windows.Data;
 using System.Windows.Media;
+using Open3DViewer.PBRRenderer;
+using Open3DViewer.PBRRenderer.Types;
 
 namespace Open3DViewer.Gui.ViewModel
 {
@@ -18,7 +19,7 @@ namespace Open3DViewer.Gui.ViewModel
     
     public class ApplicationTabsViewModel : ObservableObject
     {
-        private readonly PBRRenderEngine.PBRRenderEngine m_engine;
+        private readonly PBRRenderEngine m_engine;
 
         private ApplicationTabs m_activeTab = ApplicationTabs.EnvironmentAndLighting;
 
@@ -71,7 +72,7 @@ namespace Open3DViewer.Gui.ViewModel
         public ObservableCollection<DirectionalLightViewModel> DirectionalLights { get; } =
             new ObservableCollection<DirectionalLightViewModel>();
 
-        public ApplicationTabsViewModel(PBRRenderEngine.PBRRenderEngine engine)
+        public ApplicationTabsViewModel(PBRRenderEngine engine)
         {
             m_engine = engine;
 

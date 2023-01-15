@@ -1,12 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Numerics;
 using System.Windows.Media;
+using Open3DViewer.PBRRenderer;
 
 namespace Open3DViewer.Gui.ViewModel
 {
     public class DirectionalLightViewModel : ObservableObject
     {
-        private readonly PBRRenderEngine.PBRRenderEngine m_engine;
+        private readonly PBRRenderEngine m_engine;
         private readonly int m_lightIndex;
 
         public string LightName => $"Directional Light {m_lightIndex + 1}";
@@ -39,7 +40,7 @@ namespace Open3DViewer.Gui.ViewModel
             }
         }
 
-        public DirectionalLightViewModel(PBRRenderEngine.PBRRenderEngine engine, int lightIndex)
+        public DirectionalLightViewModel(PBRRenderEngine engine, int lightIndex)
         {
             m_engine = engine;
             m_lightIndex = lightIndex;

@@ -3,7 +3,7 @@ using System.Numerics;
 using Veldrid;
 using Vortice.Mathematics;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.GLTF
+namespace Open3DViewer.PBRRenderer.GLTF
 {
     public class GLTFEntity : IDisposable
     {

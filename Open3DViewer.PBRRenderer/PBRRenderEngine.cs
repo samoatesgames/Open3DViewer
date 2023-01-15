@@ -1,17 +1,17 @@
-﻿using Open3DViewer.Gui.PBRRenderEngine.Camera;
-using Open3DViewer.Gui.PBRRenderEngine.GLTF;
-using Open3DViewer.Gui.PBRRenderEngine.Meshes;
-using Open3DViewer.Gui.PBRRenderEngine.Types;
-using Open3DViewer.RenderViewControl;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Open3DViewer.PBRRenderer.Camera;
+using Open3DViewer.PBRRenderer.GLTF;
+using Open3DViewer.PBRRenderer.Meshes;
+using Open3DViewer.PBRRenderer.Types;
+using Open3DViewer.RenderViewControl;
 using Veldrid;
 using Vortice.Mathematics;
 
-namespace Open3DViewer.Gui.PBRRenderEngine
+namespace Open3DViewer.PBRRenderer
 {
     public class PBRRenderEngine : IRenderEngine
     {

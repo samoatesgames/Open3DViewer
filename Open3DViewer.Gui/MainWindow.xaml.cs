@@ -1,4 +1,5 @@
 ﻿using Open3DViewer.Gui.ViewModel;
+using Open3DViewer.PBRRenderer;
 
 namespace Open3DViewer.Gui
 {
@@ -12,7 +13,7 @@ namespace Open3DViewer.Gui
             InitializeComponent();
             Wpf.Ui.Appearance.Accent.ApplySystemAccent();
 
-            var renderEngine = new PBRRenderEngine.PBRRenderEngine();
+            var renderEngine = new PBRRenderEngine();
             RenderView.RenderEngine = renderEngine;
 
             DataContext = new ApplicationViewModel(renderEngine, RenderView);

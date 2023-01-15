@@ -1,4 +1,4 @@
-﻿namespace Open3DViewer.Gui.PBRRenderEngine.Buffers.Vertex
+﻿namespace Open3DViewer.PBRRenderer.Buffers.Vertex
 {
     public struct VertexLayoutFull : IVertexLayout
     {

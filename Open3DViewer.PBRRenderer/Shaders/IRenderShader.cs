@@ -1,6 +1,6 @@
 ﻿using Veldrid;
 
-namespace Open3DViewer.Gui.PBRRenderEngine.Shaders
+namespace Open3DViewer.PBRRenderer.Shaders
 {
     public interface IRenderShader
     {
