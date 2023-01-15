@@ -11,7 +11,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
         public const uint ClassSize = 32;
 
         public Vector3 Direction;
-        public float Padding1;
+        public uint IsActive;
 
         public Vector3 Radiance;
         public float Padding2;
@@ -47,7 +47,7 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                         writer.Write(light.Direction.X);
                         writer.Write(light.Direction.Y);
                         writer.Write(light.Direction.Z);
-                        writer.Write(0.0f);
+                        writer.Write(light.IsActive);
 
                         writer.Write(light.Radiance.X);
                         writer.Write(light.Radiance.Y);
@@ -82,17 +82,20 @@ namespace Open3DViewer.Gui.PBRRenderEngine.Types
                 new DirectionalLight
                 {
                     Direction = Vector3.Normalize(new Vector3(0.0f,  0.4f, 1.0f)),
-                    Radiance = Vector3.One * 0.5f
+                    Radiance = Vector3.One * 0.5f,
+                    IsActive = 1
                 },
                 new DirectionalLight
                 {
                     Direction = Vector3.Normalize(new Vector3(-0.8f,  0.4f, -0.2f)),
-                    Radiance = Vector3.One * 0.5f
+                    Radiance = Vector3.One * 0.5f,
+                    IsActive = 1
                 },
                 new DirectionalLight
                 {
                     Direction = Vector3.Normalize(new Vector3(0.8f, 0.4f, -0.2f)),
-                    Radiance = Vector3.One * 0.5f
+                    Radiance = Vector3.One * 0.5f,
+                    IsActive = 1
                 }
             };
 

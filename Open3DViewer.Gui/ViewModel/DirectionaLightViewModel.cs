@@ -9,9 +9,6 @@ namespace Open3DViewer.Gui.ViewModel
         private readonly PBRRenderEngine.PBRRenderEngine m_engine;
         private readonly int m_lightIndex;
 
-        private bool m_isActive = true;
-        private Color m_activeLightColor;
-
         public string LightName => $"Directional Light {m_lightIndex + 1}";
 
         public Color LightColor
@@ -34,24 +31,11 @@ namespace Open3DViewer.Gui.ViewModel
 
         public bool IsActive
         {
-            get => m_isActive;
+            get => m_engine.SceneInfo.Lights[m_lightIndex].IsActive == 1u;
             set
             {
-                if (value != m_isActive)
-                {
-                    m_isActive = value;
-                    if (m_isActive)
-                    {
-                        LightColor = m_activeLightColor;
-                    }
-                    else
-                    {
-                        m_activeLightColor = LightColor;
-                        LightColor = Colors.Black;
-                    }
-
-                    OnPropertyChanged();
-                }
+                m_engine.SetDirectionalLightActive(m_lightIndex, value);
+                OnPropertyChanged();
             }
         }
 
@@ -59,7 +43,6 @@ namespace Open3DViewer.Gui.ViewModel
         {
             m_engine = engine;
             m_lightIndex = lightIndex;
-            m_activeLightColor = LightColor;
         }
     }
 }

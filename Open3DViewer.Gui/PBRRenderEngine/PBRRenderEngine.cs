@@ -175,6 +175,11 @@ namespace Open3DViewer.Gui.PBRRenderEngine
             m_sceneInfo.Lights[lightIndex].Radiance = color;
         }
 
+        public void SetDirectionalLightActive(int lightIndex, bool isActive)
+        {
+            m_sceneInfo.Lights[lightIndex].IsActive = (uint)(isActive ? 1 : 0);
+        }
+
         public async Task<bool> TryLoadAssetAsync(string assetPath)
         {
             IsAssetLoading = true;

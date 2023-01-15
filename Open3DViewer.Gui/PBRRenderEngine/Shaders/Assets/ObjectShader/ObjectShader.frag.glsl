@@ -16,7 +16,7 @@ const uint IsOcclusionTextureBound = 16;
 struct DirectionalLight
 {
 	vec3 direction;
-	float padding_direction;
+	uint isActive;
 
 	vec3 radiance;
 	float padding_radiance;
@@ -160,6 +160,11 @@ void main()
 	vec3 directLighting = vec3(0);
 	for(int i=0; i<NumLights; ++i)
 	{
+		if (Lights[i].isActive == 0)
+		{
+			continue;
+		}
+
 		vec3 Li = Lights[i].direction;
 		vec3 Lradiance = Lights[i].radiance;
 
