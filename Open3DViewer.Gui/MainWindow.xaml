@@ -23,6 +23,7 @@
             <converter:ActiveApplicationTabToVisibilityConverter x:Key="Converter.ActiveTabToVisibility" />
             <converter:ColorToSolidBrushConverter x:Key="Converter.ColorToSolidBrush" />
             <converter:BoolToVisibilityConverter x:Key="Converter.BoolToVisibility" />
+            <converter:BoolToInverseConverter x:Key="Converter.BoolToInverse" />
 
             <Style x:Key="Style.Path.Icon" TargetType="{x:Type Path}">
                 <Setter Property="Fill" Value="{StaticResource TextFillColorPrimaryBrush}" />
@@ -209,9 +210,10 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <ui:ProgressRing Grid.Column="1" Grid.Row="1" IsIndeterminate="True" />
-                    <TextBlock Grid.Column="1" Grid.Row="2" Margin="0,8" Text="Loading..." />
-
+                    <TextBlock Grid.Column="1" Grid.Row="1" Margin="0,8" HorizontalAlignment="Center" Text="Loading..." />
+                    <ProgressBar Grid.Column="1" Grid.Row="2" Height="6"
+                                 IsIndeterminate="{Binding ShowRenderView, Converter={StaticResource Converter.BoolToInverse}}" />
+                    
                 </Grid>
             </Grid>
 

@@ -62,7 +62,7 @@ namespace Open3DViewer.PBRRenderer
         public delegate void RenderEngineGridVisibilityChanged(PBRRenderEngine engine, bool isVisible);
         public event RenderEngineGridVisibilityChanged OnGridVisibilityChanged;
 
-        public delegate void RenderEngineAssetLoadingChanged(PBRRenderEngine engine, bool isLoading);
+        public delegate Task RenderEngineAssetLoadingChanged(PBRRenderEngine engine, bool isLoading);
         public event RenderEngineAssetLoadingChanged OnAssetLoadingChanged;
 
         public void Initialize(GraphicsDevice graphicsDevice, ResourceFactory factory, Swapchain swapchain)

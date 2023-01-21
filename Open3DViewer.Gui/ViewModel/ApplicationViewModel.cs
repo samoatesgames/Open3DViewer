@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Open3DViewer.PBRRenderer;
 
@@ -52,9 +53,12 @@ namespace Open3DViewer.Gui.ViewModel
             OnPropertyChanged(nameof(IsGridEnabled));
         }
 
-        private void RenderEngineAssetLoadingChanged(PBRRenderEngine engine, bool isLoading)
+        private async Task RenderEngineAssetLoadingChanged(PBRRenderEngine engine, bool isLoading)
         {
-            OnPropertyChanged(nameof(ShowRenderView));
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                OnPropertyChanged(nameof(ShowRenderView));
+            });
         }
     }
 }

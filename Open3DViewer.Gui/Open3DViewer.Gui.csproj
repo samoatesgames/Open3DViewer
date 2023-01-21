@@ -274,6 +274,7 @@
     </ApplicationDefinition>
     <Compile Include="Converter\ActiveApplicationTabToBoolConverter.cs" />
     <Compile Include="Converter\ActiveApplicationTabToVisibilityConverter.cs" />
+    <Compile Include="Converter\BoolToInverseConverter.cs" />
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
     <Compile Include="Converter\ColorToSolidBrushConverter.cs" />
     <Compile Include="Converter\DoesCollectionContainItemsConverter.cs" />
