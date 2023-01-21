@@ -140,11 +140,7 @@ namespace Open3DViewer.PBRRenderer.Camera
         {
             var newZoom = m_zoomAmount + m_zoomDelta;
             m_zoomDelta *= 0.75f;
-
-            if (newZoom > (m_entitySize * 0.25f))
-            {
-                m_zoomAmount = newZoom;
-            }
+            m_zoomAmount = newZoom;
         }
 
         public void GenerateCommands(CommandList commandList)
@@ -154,7 +150,10 @@ namespace Open3DViewer.PBRRenderer.Camera
                 var lookAtBounds = m_lookAtEntity.GetBoundingBox();
                 var zOffset = Vector3.UnitZ * m_zoomAmount;
                 var cameraLookAt = lookAtBounds.Center;
-                Position = Vector3.Transform(cameraLookAt + zOffset, Matrix4x4.CreateFromYawPitchRoll(m_yawRotation, m_pitchRotation, 0.0f));
+
+                var position = cameraLookAt;
+                position += Vector3.Transform(zOffset, Matrix4x4.CreateFromYawPitchRoll(m_yawRotation, m_pitchRotation, 0.0f));
+                Position = position;
                 m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Position, cameraLookAt, Vector3.UnitY);
             }
             else
