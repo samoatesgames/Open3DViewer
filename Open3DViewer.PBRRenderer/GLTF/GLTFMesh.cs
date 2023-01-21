@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -27,7 +28,7 @@ namespace Open3DViewer.PBRRenderer.GLTF
         private DeviceBuffer m_indexBuffer;
         private uint m_indexCount;
 
-        private readonly Dictionary<TextureSamplerIndex, TextureView> m_textureViews = new Dictionary<TextureSamplerIndex, TextureView>();
+        private readonly ConcurrentDictionary<TextureSamplerIndex, TextureView> m_textureViews = new ConcurrentDictionary<TextureSamplerIndex, TextureView>();
 
         private readonly Material m_material;
         private MaterialInfo m_materialInfo;
