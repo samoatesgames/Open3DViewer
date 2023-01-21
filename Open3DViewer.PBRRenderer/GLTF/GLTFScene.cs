@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Open3DViewer.PBRRenderer.Buffers.Vertex;
 using SharpGLTF.Schema2;
+using SharpGLTF.Validation;
 using Veldrid;
 using Vortice.Mathematics;
 
@@ -27,7 +28,10 @@ namespace Open3DViewer.PBRRenderer.GLTF
 
             try
             {
-                var model = ModelRoot.Load(gltfFilePath);
+                var model = ModelRoot.Load(gltfFilePath, new ReadSettings
+                {
+                    Validation = ValidationMode.TryFix
+                });
                 var scene = new GLTFScene(engine, model);
                 await scene.Initialize();
                 return scene;
