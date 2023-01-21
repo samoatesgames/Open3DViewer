@@ -14,7 +14,8 @@
              WindowBackdropType="None"
              WindowCornerPreference="Default"
              d:DataContext="{d:DesignInstance viewModel:ApplicationViewModel}"
-             WindowStartupLocation="CenterScreen" Width="1280" Height="720">
+             WindowStartupLocation="CenterScreen" Width="1280" Height="720"
+             AllowDrop="True" Drop="MainWindow_OnDrop" DragOver="MainWindow_OnDragOver">
     <ui:UiWindow.Resources>
         <ResourceDictionary>
             <converter:DoesCollectionContainItemsConverter x:Key="Converter.DoesCollectionContainItems" />
