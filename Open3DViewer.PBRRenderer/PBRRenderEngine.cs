@@ -112,7 +112,7 @@ namespace Open3DViewer.PBRRenderer
                 m_grid?.Render(commandList);
             }
             
-            m_entity?.Render(commandList);
+            m_entity?.Render(commandList, m_camera);
         }
         
         public void OnSwapchainResized(uint width, uint height)

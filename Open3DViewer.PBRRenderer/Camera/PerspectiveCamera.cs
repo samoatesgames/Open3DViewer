@@ -5,6 +5,7 @@ using Open3DViewer.RenderViewControl.Types;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Veldrid;
+using Vortice.Mathematics;
 
 namespace Open3DViewer.PBRRenderer.Camera
 {
@@ -19,6 +20,7 @@ namespace Open3DViewer.PBRRenderer.Camera
 
         private ViewProjectionInfo m_viewProjectionInfo;
         private readonly DeviceBuffer m_viewProjectionBuffer;
+        private readonly CameraFrustum m_frustum;
 
         private float m_aspectRatio;
         private GLTFEntity m_lookAtEntity;
@@ -54,6 +56,9 @@ namespace Open3DViewer.PBRRenderer.Camera
             }
         }
 
+        public Matrix4x4 ViewMatrix => m_viewProjectionInfo.View;
+        public Matrix4x4 ProjectionMatrix => m_viewProjectionInfo.Projection;
+
         public PerspectiveCamera(PBRRenderEngine engine, ResourceFactory factory)
         {
             m_viewProjectionBuffer = factory.CreateBuffer(new BufferDescription((uint)Marshal.SizeOf<ViewProjectionInfo>(), BufferUsage.UniformBuffer));
@@ -63,6 +68,13 @@ namespace Open3DViewer.PBRRenderer.Camera
 
             var frameBuffer = engine.Swapchain.Framebuffer;
             OnSwapchainResized(frameBuffer.Width, frameBuffer.Height);
+
+            m_frustum = new CameraFrustum(this);
+        }
+
+        public bool CanSee(BoundingBox boundingBox)
+        {
+            return m_frustum.Contains(boundingBox);
         }
 
         public void OnSwapchainResized(uint width, uint height)
@@ -116,8 +128,6 @@ namespace Open3DViewer.PBRRenderer.Camera
                     offset += cameraUp * (moveAmount.Y * 0.01f);
                     
                     m_orbitOffset += offset;
-
-                    Debug.WriteLine(m_orbitOffset);
                     break;
             }
         }
@@ -177,6 +187,8 @@ namespace Open3DViewer.PBRRenderer.Camera
 
         public void GenerateCommands(CommandList commandList)
         {
+            m_frustum.Update();
+
             m_viewProjectionInfo.View = Matrix4x4.CreateLookAt(Position, CameraLookAt, Vector3.UnitY);
             commandList.UpdateBuffer(m_viewProjectionBuffer, 0, ref m_viewProjectionInfo);
         }

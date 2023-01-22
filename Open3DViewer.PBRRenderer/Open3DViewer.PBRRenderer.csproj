@@ -226,6 +226,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Camera\CameraFrustum.cs" />
     <Compile Include="PBRRenderEngine.cs" />
     <Compile Include="Buffers\Vertex\GridVertexLayout.cs" />
     <Compile Include="Meshes\GridMesh.cs" />

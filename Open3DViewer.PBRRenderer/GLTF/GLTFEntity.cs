@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Open3DViewer.PBRRenderer.Camera;
 using Veldrid;
 using Vortice.Mathematics;
 
@@ -19,9 +20,14 @@ namespace Open3DViewer.PBRRenderer.GLTF
             Scene.Dispose();
         }
 
-        public void Render(CommandList commandList)
+        public void Render(CommandList commandList, PerspectiveCamera camera)
         {
-            Scene.Render(commandList, Matrix4x4.Identity);
+            if (!camera.CanSee(Scene.BoundingBox))
+            {
+                return;
+            }
+
+            Scene.Render(commandList, camera, Matrix4x4.Identity);
         }
 
         public BoundingBox GetBoundingBox()
