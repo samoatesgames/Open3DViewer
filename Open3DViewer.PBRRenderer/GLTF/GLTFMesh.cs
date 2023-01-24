@@ -130,8 +130,23 @@ namespace Open3DViewer.PBRRenderer.GLTF
         }
 #endif
 
-        public virtual void Render(CommandList commandList, Matrix4x4 worldTransform)
+        public virtual void Render(CommandList commandList, RenderPass renderPass, Matrix4x4 worldTransform)
         {
+            if (renderPass == RenderPass.Opaque)
+            {
+                if (m_material.Alpha == AlphaMode.BLEND)
+                {
+                    return;
+                }
+            }
+            else if (renderPass == RenderPass.Alpha)
+            {
+                if (m_material.Alpha != AlphaMode.BLEND)
+                {
+                    return;
+                }
+            }
+
             var transform = m_localTransform * worldTransform;
             commandList.UpdateBuffer(m_worldBuffer, 0, ref transform);
             
@@ -176,7 +191,7 @@ namespace Open3DViewer.PBRRenderer.GLTF
 
             var pipelineDescription = new GraphicsPipelineDescription
             {
-                BlendState = BlendStateDescription.SingleOverrideBlend,
+                BlendState = BlendStateDescription.SingleAlphaBlend,
                 DepthStencilState = new DepthStencilStateDescription
                 (
                     depthTestEnabled: true,
@@ -401,6 +416,9 @@ namespace Open3DViewer.PBRRenderer.GLTF
                     }
                 }));
             }
+
+            m_materialInfo.AlphaMode = (uint)m_material.Alpha;
+            m_materialInfo.AlphaCutoff = m_material.AlphaCutoff;
 
             return jobs;
         }

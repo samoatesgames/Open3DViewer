@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Open3DViewer.PBRRenderer.Buffers.Vertex;
 using Open3DViewer.PBRRenderer.Camera;
+using Open3DViewer.PBRRenderer.Types;
 using SharpGLTF.Schema2;
 using SharpGLTF.Validation;
 using Veldrid;
@@ -260,7 +261,7 @@ namespace Open3DViewer.PBRRenderer.GLTF
             return true;
         }
         
-        public void Render(CommandList commandList, PerspectiveCamera camera, Matrix4x4 worldTransform)
+        public void Render(CommandList commandList, PerspectiveCamera camera, RenderPass renderPass, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)
             {
@@ -268,7 +269,7 @@ namespace Open3DViewer.PBRRenderer.GLTF
                 {
                     continue;
                 }
-                mesh.Render(commandList, worldTransform);
+                mesh.Render(commandList, renderPass, worldTransform);
             }
         }
     }

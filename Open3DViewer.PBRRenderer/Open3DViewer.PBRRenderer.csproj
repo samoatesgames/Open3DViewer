@@ -232,6 +232,7 @@
     <Compile Include="Meshes\GridMesh.cs" />
     <Compile Include="Shaders\GridShader.cs" />
     <Compile Include="Types\MaterialInfo.cs" />
+    <Compile Include="Types\RenderPass.cs" />
     <Compile Include="Types\SceneInfo.cs" />
     <Compile Include="Types\ShaderResourceManager.cs" />
     <Compile Include="Types\ShadingModes.cs" />

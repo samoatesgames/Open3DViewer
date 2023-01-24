@@ -5,13 +5,17 @@
 const float PI = 3.141592;
 const float Epsilon = 0.00001;
 const int NumLights = 3;
-const vec3 Fdielectric = vec3(0.025);
+const vec3 Fdielectric = vec3(0.04);
 
 const uint IsDiffuseTextureBound = 1;
 const uint IsNormalTextureBound = 2;
 const uint IsMetallicRoughnessTextureBound = 4;
 const uint IsEmissiveTextureBound = 8;
 const uint IsOcclusionTextureBound = 16;
+
+const uint AlphaMode_Opaque = 0;
+const uint AlphaMode_Mask = 1;
+const uint AlphaMode_Blend = 2;
 
 struct DirectionalLight
 {
@@ -45,6 +49,10 @@ layout(set = 2, binding = 1) uniform MaterialInfo
 	uint BoundTextureBitMask;
 	float OcclusionStrength;
 	vec4 EmissiveFactors;
+	uint AlphaMode;
+	float AlphaCutOff;
+
+	vec2 materialInfoPadding0;
 };
 
 layout(set = 3, binding = 0) uniform sampler DiffuseSampler;
@@ -108,8 +116,20 @@ vec3 fresnelSchlick(vec3 F0, float cosTheta)
 void main()
 {
     // Sample input textures to get shading model params.
-	vec3 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord).rgb;
-	albedo *= DiffuseTint.xyz;
+	vec4 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord);
+	albedo *= DiffuseTint;
+
+	if (AlphaMode == AlphaMode_Opaque)
+	{
+		albedo.a = 1.0f;
+	}
+	else if (AlphaMode == AlphaMode_Mask)
+	{
+		if (albedo.a < AlphaCutOff)
+		{
+			discard;
+		}
+	}
 
 	// Get the metalic/roughness values
 	float metalness = 1.0f;
@@ -154,7 +174,7 @@ void main()
 	vec3 Lr = 2.0 * cosLo * N - Lo;
 
 	// Fresnel reflectance at normal incidence (for metals use albedo color).
-	vec3 F0 = mix(Fdielectric, albedo, metalness);
+	vec3 F0 = mix(Fdielectric, albedo.rgb, metalness);
 
     // Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
@@ -190,10 +210,10 @@ void main()
 		// Lambert diffuse BRDF.
 		// We don't scale by 1/PI for lighting & material units to be more convenient.
 		// See: https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
-		vec3 diffuseBRDF = kd * albedo;
+		vec3 diffuseBRDF = kd * albedo.rgb;
 
 		// Cook-Torrance specular microfacet BRDF.
-		vec3 specularBRDF = (F * D * G) / max(Epsilon, 0.5f * cosLi * cosLo);
+		vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0f * cosLi * cosLo);
 
 		// Total contribution for this light.
 		directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
@@ -215,7 +235,7 @@ void main()
 		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
 
 		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
-		vec3 diffuseIBL = kd * albedo * irradiance;
+		vec3 diffuseIBL = kd * albedo.rgb * irradiance;
 
 		vec3 specularIrradiance = vec3(1.0f, 1.0f, 1.0f);
 
@@ -239,7 +259,7 @@ void main()
     if (ShadingMode == 1)
     {
         // [Debug] Draw Diffuse Map Only
-        result = (final - final) + albedo;
+        result = (final - final) + albedo.rgb;
     }
     else if (ShadingMode == 2)
     {
@@ -302,5 +322,5 @@ void main()
         result = (final - final) + vin.position;
     }
 
-    fsout_color = vec4(result, 1);
+    fsout_color = vec4(result, albedo.a);
 }
