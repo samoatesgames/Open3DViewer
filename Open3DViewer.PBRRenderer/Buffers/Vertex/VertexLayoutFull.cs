@@ -20,7 +20,12 @@
 
         public float TexU0;
         public float TexV0;
-        
-        public uint GetSizeInBytes() => 56;
+
+        public float ColorR;
+        public float ColorG;
+        public float ColorB;
+        public float ColorA;
+
+        public uint GetSizeInBytes() => 72;
     }
 }

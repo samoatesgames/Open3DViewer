@@ -165,6 +165,7 @@ namespace Open3DViewer.PBRRenderer.GLTF
             IList<Vector3> normalStream = null;
             IList<Vector4> tangentStream = null;
             IList<Vector2> uv0Stream = null;
+            IList<Vector4> color0Stream = null;
             
             foreach (var vertexAccessorDesc in primitive.VertexAccessors)
             {
@@ -184,6 +185,9 @@ namespace Open3DViewer.PBRRenderer.GLTF
                         break;
                     case "TEXCOORD_0":
                         uv0Stream = accessor.AsVector2Array();
+                        break;
+                    case "COLOR_0":
+                        color0Stream = accessor.AsColorArray();
                         break;
                 }
             }
@@ -250,7 +254,17 @@ namespace Open3DViewer.PBRRenderer.GLTF
                     vertex.TexU0 = uv0.X;
                     vertex.TexV0 = uv0.Y;
                 }
-                
+
+                var color = Vector4.One;
+                if (color0Stream != null)
+                {
+                    color = color0Stream[vertexIndex];
+                }
+                vertex.ColorR = color.X;
+                vertex.ColorG = color.Y;
+                vertex.ColorB = color.Z;
+                vertex.ColorA = color.W;
+
                 vertices.Add(vertex);
             }
 

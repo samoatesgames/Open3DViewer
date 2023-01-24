@@ -77,6 +77,7 @@ layout(location=0) in Vertex
 	vec3 tangent;
 	vec3 bitangent;
 	vec2 texcoord;
+	vec4 color;
 	mat3 tangentBasis;
 } vin;
 
@@ -118,6 +119,7 @@ void main()
     // Sample input textures to get shading model params.
 	vec4 albedo = texture(sampler2D(DiffuseTexture, DiffuseSampler), vin.texcoord);
 	albedo *= DiffuseTint;
+	albedo *= vin.color;
 
 	if (AlphaMode == AlphaMode_Opaque)
 	{
