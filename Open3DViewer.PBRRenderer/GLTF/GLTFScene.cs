@@ -199,7 +199,36 @@ namespace Open3DViewer.PBRRenderer.GLTF
                 gltfMesh = null;
                 return false;
             }
-            
+
+            if (normalStream == null)
+            {
+                // TODO: Generate flat normals
+                gltfMesh = null;
+                return false;
+            }
+
+            if (tangentStream == null)
+            {
+                if (uv0Stream != null)
+                {
+                    GenerateTangents(indices, positionStream, normalStream, uv0Stream, out tangentStream);
+                }
+                else
+                {
+                    tangentStream = new List<Vector4>();
+                    foreach (var normal in normalStream)
+                    {
+                        var t1 = Vector3.Cross(normal, Vector3.UnitZ);
+                        var t2 = Vector3.Cross(normal, Vector3.UnitY);
+                        var tangent = t1.LengthSquared() > t2.LengthSquared() ? t1 : t2;
+                        var biTangent = Vector3.Cross(normal, tangent);
+
+                        var handedness = Vector3.Dot(Vector3.Cross(tangent, normal), biTangent) < 0 ? -1.0f : 1.0f;
+                        tangentStream.Add(new Vector4(tangent.X, tangent.Y, tangent.Z, handedness));
+                    }
+                }
+            }
+
             var vertices = new List<VertexLayoutFull>();
             
             for (var vertexIndex = 0; vertexIndex < positionStream.Count; ++vertexIndex)
@@ -211,42 +240,20 @@ namespace Open3DViewer.PBRRenderer.GLTF
                 vertex.PositionY = pos.Y;
                 vertex.PositionZ = pos.Z;
 
-                if (normalStream != null)
-                {
-                    var normal = normalStream[vertexIndex];
-                    vertex.NormalX = normal.X;
-                    vertex.NormalY = normal.Y;
-                    vertex.NormalZ = normal.Z;
+                var normal = normalStream[vertexIndex];
+                vertex.NormalX = normal.X;
+                vertex.NormalY = normal.Y;
+                vertex.NormalZ = normal.Z;
 
-                    if (tangentStream != null)
-                    {
-                        var tangent = tangentStream[vertexIndex];
-                        vertex.TangentX = tangent.X;
-                        vertex.TangentY = tangent.Y;
-                        vertex.TangentZ = tangent.Z;
+                var tangent = tangentStream[vertexIndex];
+                vertex.TangentX = tangent.X;
+                vertex.TangentY = tangent.Y;
+                vertex.TangentZ = tangent.Z;
 
-                        var biTangent = Vector3.Cross(normal, new Vector3(tangent.X, tangent.Y, tangent.Z)) * tangent.W;
-                        vertex.BiTangentX = biTangent.X;
-                        vertex.BiTangentY = biTangent.Y;
-                        vertex.BiTangentZ = biTangent.Z;
-                    }
-                    else
-                    {
-                        // Calculate our tangent/bitangent
-                        var t1 = Vector3.Cross(normal, Vector3.UnitZ);
-                        var t2 = Vector3.Cross(normal, Vector3.UnitY);
-                        var tangent = t1.LengthSquared() > t2.LengthSquared() ? t1 : t2;
-                        var biTangent = Vector3.Cross(normal, tangent);
-
-                        vertex.TangentX = tangent.X;
-                        vertex.TangentY = tangent.Y;
-                        vertex.TangentZ = tangent.Z;
-
-                        vertex.BiTangentX = biTangent.X;
-                        vertex.BiTangentY = biTangent.Y;
-                        vertex.BiTangentZ = biTangent.Z;
-                    }
-                }
+                var biTangent = Vector3.Cross(normal, new Vector3(tangent.X, tangent.Y, tangent.Z)) * tangent.W;
+                vertex.BiTangentX = biTangent.X;
+                vertex.BiTangentY = biTangent.Y;
+                vertex.BiTangentZ = biTangent.Z;
 
                 if (uv0Stream != null)
                 {
@@ -274,7 +281,112 @@ namespace Open3DViewer.PBRRenderer.GLTF
             gltfMesh.Initialize(vertices.ToArray(), indices.ToArray());
             return true;
         }
-        
+
+        private void GenerateTangents(List<uint> indices, IList<Vector3> positionStream, IList<Vector3> normalStream, IList<Vector2> uv0Stream, out IList<Vector4> tangentStream)
+        {
+            void addTangent(Dictionary<System.ValueTuple<Vector3, Vector3, Vector2>, (Vector3, Vector3)> dict, System.ValueTuple<Vector3, Vector3, Vector2> key, (Vector3 tu, Vector3 tv) alpha)
+            {
+                dict.TryGetValue(key, out (Vector3 tu, Vector3 tv) beta);
+                dict[key] = (alpha.tu + beta.tu, alpha.tv + beta.tv);
+            }
+
+            bool isFinite(float value)
+            {
+                return !(float.IsNaN(value) || float.IsInfinity(value));
+            }
+
+            bool isFiniteVec3(Vector3 v)
+            {
+                return isFinite(v.X) && isFinite(v.Y) && isFinite(v.Z);
+            }
+
+            var tangentsMap = new Dictionary<System.ValueTuple<Vector3, Vector3, Vector2>, (Vector3 u, Vector3 v)>();
+
+            // calculate
+            for (var i = 0; i < indices.Count; i += 3)
+            {
+                var i1 = (int)indices[i + 0];
+                var i2 = (int)indices[i + 1];
+                var i3 = (int)indices[i + 2];
+
+                var p1 = positionStream[i1];
+                var p2 = positionStream[i2];
+                var p3 = positionStream[i3];
+
+                // check for degenerated triangle
+                if (p1 == p2 || p1 == p3 || p2 == p3) continue;
+
+                var uv1 = uv0Stream[i1];
+                var uv2 = uv0Stream[i2];
+                var uv3 = uv0Stream[i3];
+
+                // check for degenerated triangle
+                if (uv1 == uv2 || uv1 == uv3 || uv2 == uv3) continue;
+
+                var n1 = normalStream[i1];
+                var n2 = normalStream[i2];
+                var n3 = normalStream[i3];
+
+                // calculate tangents
+                var svec = p2 - p1;
+                var tvec = p3 - p1;
+
+                var stex = uv2 - uv1;
+                var ttex = uv3 - uv1;
+
+                float sx = stex.X;
+                float tx = ttex.X;
+                float sy = stex.Y;
+                float ty = ttex.Y;
+
+                var r = 1.0F / ((sx * ty) - (tx * sy));
+
+                if (!isFinite(r)) continue;
+
+                var sdir = new Vector3((ty * svec.X) - (sy * tvec.X), (ty * svec.Y) - (sy * tvec.Y), (ty * svec.Z) - (sy * tvec.Z)) * r;
+                var tdir = new Vector3((sx * tvec.X) - (tx * svec.X), (sx * tvec.Y) - (tx * svec.Y), (sx * tvec.Z) - (tx * svec.Z)) * r;
+
+                if (!isFiniteVec3(sdir)) continue;
+                if (!isFiniteVec3(tdir)) continue;
+
+                // accumulate tangents
+                addTangent(tangentsMap, (p1, n1, uv1), (sdir, tdir));
+                addTangent(tangentsMap, (p2, n2, uv2), (sdir, tdir));
+                addTangent(tangentsMap, (p3, n3, uv3), (sdir, tdir));
+            }
+
+            // normalize
+            foreach (var key in tangentsMap.Keys.ToList())
+            {
+                var val = tangentsMap[key];
+
+                // Gram-Schmidt orthogonalize
+                val.u = Vector3.Normalize(val.u - (key.Item2 * Vector3.Dot(key.Item2, val.u)));
+                val.v = Vector3.Normalize(val.v - (key.Item2 * Vector3.Dot(key.Item2, val.v)));
+
+                tangentsMap[key] = val;
+            }
+
+            // apply
+            tangentStream = new List<Vector4>(new Vector4[positionStream.Count]);
+            for (var i = 0; i < positionStream.Count; ++i)
+            {
+                var p = positionStream[i];
+                var n = normalStream[i];
+                var t = uv0Stream[i];
+
+                if (tangentsMap.TryGetValue((p, n, t), out (Vector3 u, Vector3 v) tangents))
+                {
+                    var handedness = Vector3.Dot(Vector3.Cross(tangents.u, n), tangents.v) < 0 ? -1.0f : 1.0f;
+                    tangentStream[i] = new Vector4(tangents.u, handedness);
+                }
+                else
+                {
+                    tangentStream[i] = new Vector4(1, 0, 0, 1);
+                }
+            }
+        }
+
         public void Render(CommandList commandList, PerspectiveCamera camera, RenderPass renderPass, Matrix4x4 worldTransform)
         {
             foreach (var mesh in m_meshes)
