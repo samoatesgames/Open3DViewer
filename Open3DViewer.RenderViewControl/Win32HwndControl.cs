@@ -240,7 +240,7 @@ namespace Open3DViewer.RenderViewControl
 
             IntPtr hInstance,
 
-            [MarshalAs(UnmanagedType.AsAny)] object pvParam);
+            [MarshalAs(UnmanagedType.IUnknown)] object pvParam);
 
 
 

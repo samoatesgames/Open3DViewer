@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -152,6 +153,7 @@ namespace Open3DViewer.RenderViewControl
             ResizeSwapchain();
         }
 
+        [SupportedOSPlatform("windows")]
         public MemoryStream TakeScreenshot()
         {
             var position = PointToScreen(new System.Windows.Point(0d, 0d));

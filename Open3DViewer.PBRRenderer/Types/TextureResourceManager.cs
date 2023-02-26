@@ -41,7 +41,7 @@ namespace Open3DViewer.PBRRenderer.Types
         private string CalculateTextureHash(SharpGLTF.Schema2.Texture inputTexture, out byte[] textureBytes)
         {
             textureBytes = inputTexture.PrimaryImage.Content.Content.ToArray();
-            using (var md5 = new MD5CryptoServiceProvider())
+            using (var md5 = MD5.Create())
             {
                 var sb = new StringBuilder();
                 foreach (var b in md5.ComputeHash(textureBytes))

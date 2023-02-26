@@ -199,6 +199,12 @@ namespace Open3DViewer.Gui.ViewModel
 
         private async Task HandleFileExportImage()
         {
+            if (!OperatingSystem.IsWindows())
+            {
+                MessageBox.Show("Exporting to image is only supported on Windows");
+                return;
+            }
+
             using (var memoryStream = m_renderViewControl.TakeScreenshot())
             {
                 var saveFileDialog = new SaveFileDialog

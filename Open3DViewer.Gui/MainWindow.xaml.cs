@@ -18,7 +18,11 @@ namespace Open3DViewer.Gui
         public MainWindow()
         {
             InitializeComponent();
-            Wpf.Ui.Appearance.Accent.ApplySystemAccent();
+
+            if (OperatingSystem.IsWindowsVersionAtLeast(7))
+            {
+                Wpf.Ui.Appearance.Accent.ApplySystemAccent();
+            }
 
             m_renderEngine = new PBRRenderEngine();
             RenderView.RenderEngine = m_renderEngine;
